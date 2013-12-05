@@ -1,4 +1,4 @@
 scoreflex-unity-sdk
 ===================
 
-Scoreflex Unity SDK
+Scoreflex Unity Plugin
