@@ -7,6 +7,12 @@
 #
 # Based on code by Rob Terrell, [email]rob@stinkbot.com[/email]; modified by Joe Cooper [email]joecooper@noblemuffins.com[/email]
 
+# Dont run on any builds that are not iPhone builds
+if( $ARGV[1] ne "iPhone" )
+{
+	exit;
+}
+
 use File::Glob ':glob';
 @files = bsd_glob('Assets/Editor/postprocessbuildplayer_*', GLOB_NOCASE);
 foreach $file (@files) {

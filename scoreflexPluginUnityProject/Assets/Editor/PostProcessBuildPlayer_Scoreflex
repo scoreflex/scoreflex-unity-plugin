@@ -1,0 +1,16 @@
+#!/usr/bin/python
+import sys
+import mod_pbxproj
+from mod_pbxproj import XcodeProject
+from subprocess import call
+scoreflexDir = sys.argv[1] + "/scoreflex"
+call(["unzip", "-o", "Assets/Scoreflex/Native/iOS/scoreflex.zip", "-d", scoreflexDir])
+project = XcodeProject.Load(sys.argv[1] + "/Unity-iPhone.xcodeproj/project.pbxproj")
+group = project.get_or_create_group("Scoreflex")
+print scoreflexDir + "/libScoreflex.a"
+project.add_file(scoreflexDir + "/libScoreflex.a", parent=group)
+project.add_file(scoreflexDir + "/ScoreflexResources.bundle", parent=group)
+project.add_file(scoreflexDir + "/include/Scoreflex/Scoreflex.h", parent=group)
+project.add_file(scoreflexDir + "/include/Scoreflex/SXResponse.h", parent=group)
+project.add_file(scoreflexDir + "/include/Scoreflex/SXview.h", parent=group)
+project.save()
