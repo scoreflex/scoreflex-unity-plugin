@@ -4,6 +4,8 @@ using System.Collections;
 
 public class Scoreflex : MonoBehaviour
 {
+	public static Scoreflex Instance { get; private set; }
+
 	public string id;
 	public string secret;
 	public bool sandbox;
@@ -14,12 +16,22 @@ public class Scoreflex : MonoBehaviour
 	[DllImport ("__Internal")]
 	private static extern void scoreflexShowPlayerProfile();
 
-
-	// Use this for initialization
-	void Start () {
-		scoreflexInitialize(id, secret, sandbox);
-
-		scoreflexShowPlayerProfile();
+	void Awake()
+	{
+		if(Instance == null)
+		{
+			scoreflexInitialize(id, secret, sandbox);
+			GameObject.DontDestroyOnLoad(gameObject);
+			Instance = this;
+		}
+		else if(Instance != this)
+		{
+			GameObject.Destroy(gameObject);
+		}
 	}
 
+	public void ShowPlayerProfile()
+	{
+		scoreflexShowPlayerProfile();
+	}
 }
