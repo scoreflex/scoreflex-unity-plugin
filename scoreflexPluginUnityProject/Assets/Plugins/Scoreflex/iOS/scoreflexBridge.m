@@ -1,4 +1,4 @@
-#import <scoreflex/include/Scoreflex/Scoreflex.h>
+#import <Scoreflex/Scoreflex.h>
 
 void scoreflexInitialize(char *_id, char *_secret, int _sandbox)
 {
