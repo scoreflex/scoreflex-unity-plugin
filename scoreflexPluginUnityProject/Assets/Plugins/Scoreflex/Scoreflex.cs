@@ -8,7 +8,7 @@ public class Scoreflex : MonoBehaviour
 	public string secret;
 	public bool sandbox;
 
-	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	[DllImport ("__Internal", CharSet = CharSet.Ansi)]
 	private static extern void scoreflexInitialize(string clientId, string secret, bool sandbox);
 
 	[DllImport ("__Internal")]
