@@ -14,7 +14,7 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexInitialize(string clientId, string secret, bool sandbox);
 
 	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerProfile();
+	private static extern void scoreflexShowPlayerProfile(string playerId);
 
 	void Awake()
 	{
@@ -30,8 +30,8 @@ public class Scoreflex : MonoBehaviour
 		}
 	}
 
-	public void ShowPlayerProfile()
+	public void ShowPlayerProfile(string playerId = null)
 	{
-		scoreflexShowPlayerProfile();
+		scoreflexShowPlayerProfile(playerId);
 	}
 }
