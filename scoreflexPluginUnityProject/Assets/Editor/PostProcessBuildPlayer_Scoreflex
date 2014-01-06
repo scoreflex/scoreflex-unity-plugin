@@ -13,7 +13,7 @@ except OSError:
 	print 'Scoreflex data already copied.'
 project = XcodeProject.Load(sys.argv[1] + "/Unity-iPhone.xcodeproj/project.pbxproj")
 group = project.get_or_create_group("Scoreflex")
-project.add_file(scoreflexDir + "/scoreflexBridge.m", parent=group)
+project.add_file(scoreflexDir + "/NativeBridge.m", parent=group)
 project.add_file(scoreflexDir + "/libScoreflex.a", parent=group)
 project.add_file(scoreflexDir + "/ScoreflexResources.bundle", parent=group)
 project.add_file(scoreflexDir + "/Scoreflex.h", parent=group)
