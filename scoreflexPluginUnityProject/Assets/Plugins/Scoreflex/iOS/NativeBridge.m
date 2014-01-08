@@ -1,29 +1,37 @@
 #import <Scoreflex/Scoreflex.h>
 
-NSString * stringOrNil(const char *source)
+NSString * fromUnichar(const unichar *source)
 {
-	NSString *result = source == NULL ? nil : [NSString stringWithCString:source encoding:NSUnicodeStringEncoding];
+	size_t length = 0; while(source[length] != 0) length++;
+	NSString *string = [NSString stringWithCharacters:source length:length];
+	return string;
+}
+
+NSString * stringOrNil(const unichar *source)
+{
+	NSString *result = source == NULL ? nil : fromUnichar(source);
 	return result;
 }
 
-const char * scoreflexUnityObjectName = "Scoreflex";
+NSString * scoreflexUnityObjectName = @"Scoreflex";
 
-void scoreflexSetUnityObjectName(const char *_unityObjectName)
+void scoreflexSetUnityObjectName(const unichar *_unityObjectName)
 {
-	NSString *unityObjectName = [NSString stringWithCString:_unityObjectName encoding:NSUnicodeStringEncoding];
-	scoreflexUnityObjectName = [unityObjectName UTF8String];
+	scoreflexUnityObjectName = fromUnichar(_unityObjectName);
 }
 
-void scoreflexInitialize(const char *_id, const char *_secret, int _sandbox)
+void scoreflexInitialize(const unichar *_id, const unichar *_secret, int _sandbox)
 {
-	NSString *id = [NSString stringWithCString:_id encoding:NSUnicodeStringEncoding];
-	NSString *secret = [NSString stringWithCString:_secret encoding:NSUnicodeStringEncoding];
+	NSString *identification = fromUnichar(_id);
+	NSString *secret = fromUnichar(_secret);
 	BOOL sandbox = _sandbox == 1 ? YES : NO;
 
-	[Scoreflex setClientId:id secret:secret sandboxMode:sandbox];
+	NSLog(@"Initializing:\nid = %@\nsecret = %@\n_sandbox = %d", identification, secret, _sandbox);
+
+	[Scoreflex setClientId:identification secret:secret sandboxMode:sandbox];
 }
 
-void scoreflexGetPlayerId(char *buffer, int bufferLength)
+void scoreflexGetPlayerId(void *buffer, int bufferLength)
 {
 	NSString *playerId = [Scoreflex getPlayerId];
 	[playerId getCString:buffer maxLength:bufferLength encoding:NSUnicodeStringEncoding];
@@ -45,52 +53,52 @@ float scoreflexGetPlayingTime()
 
 // location?
 
-void scoreflexSetDeviceToken(const char *_deviceToken)
+void scoreflexSetDeviceToken(const unichar *_deviceToken)
 {
-	NSString *deviceToken = [NSString stringWithCString:_deviceToken encoding:NSUnicodeStringEncoding];
+	NSString *deviceToken = fromUnichar(_deviceToken);
 	[Scoreflex setDeviceToken:deviceToken];
 }
 
-void scoreflexShowDeveloperGames(const char *_developerId)
+void scoreflexShowDeveloperGames(const unichar *_developerId)
 {
-	NSString *developerId = [NSString stringWithCString:_developerId encoding:NSUnicodeStringEncoding];
+	NSString *developerId = fromUnichar(_developerId);
 	
 	[Scoreflex showDeveloperGames:developerId params:nil];
 }
 
-void scoreflexShowDeveloperProfile(const char *_developerId)
+void scoreflexShowDeveloperProfile(const unichar *_developerId)
 {
-	NSString *developerId = [NSString stringWithCString:_developerId encoding:NSUnicodeStringEncoding];
+	NSString *developerId = fromUnichar(_developerId);
 	
 	[Scoreflex showDeveloperProfile:developerId params:nil];
 }
 
 // showFullScreenView ?
 
-void scoreflexShowGameDetails(const char *_gameId)
+void scoreflexShowGameDetails(const unichar *_gameId)
 {
-	NSString *gameId = [NSString stringWithCString:_gameId encoding:NSUnicodeStringEncoding];
+	NSString *gameId = fromUnichar(_gameId);
 	
 	[Scoreflex showGameDetails:gameId params:nil];
 }
 
-void scoreflexShowGamePlayers(const char *_gameId)
+void scoreflexShowGamePlayers(const unichar *_gameId)
 {
-	NSString *gameId = [NSString stringWithCString:_gameId encoding:NSUnicodeStringEncoding];
+	NSString *gameId = fromUnichar(_gameId);
 	
 	[Scoreflex showGamePlayers:gameId params:nil];
 }
 
-void scoreflexShowLeaderboard(const char *_leaderboardId)
+void scoreflexShowLeaderboard(const unichar *_leaderboardId)
 {
-	NSString *leaderboardId = [NSString stringWithCString:_leaderboardId encoding:NSUnicodeStringEncoding];
+	NSString *leaderboardId = fromUnichar(_leaderboardId);
 	[Scoreflex showLeaderboard:leaderboardId params:nil];
 }
 
 
-void scoreflexShowLeaderboardOverview(const char *_leaderboardId)
+void scoreflexShowLeaderboardOverview(const unichar *_leaderboardId)
 {
-	NSString *leaderboardId = [NSString stringWithCString:_leaderboardId encoding:NSUnicodeStringEncoding];
+	NSString *leaderboardId = fromUnichar(_leaderboardId);
 	[Scoreflex showLeaderboardOverview:leaderboardId params:nil];
 }
 
@@ -101,7 +109,7 @@ void scoreflexShowPlayerChallenges()
 	[Scoreflex showPlayerChallenges:nil];
 }
 
-void scoreflexShowPlayerFriends(const char *_playerId)
+void scoreflexShowPlayerFriends(const unichar *_playerId)
 {
 	NSString *playerId = stringOrNil(_playerId);
 	[Scoreflex showPlayerFriends:playerId params:nil];
@@ -112,7 +120,7 @@ void scoreflexShowPlayerNewsFeed()
 	[Scoreflex showPlayerNewsFeed:nil];
 }
 
-void scoreflexShowPlayerProfile(const char *_playerId)
+void scoreflexShowPlayerProfile(const unichar *_playerId)
 {
 	NSString *playerId = stringOrNil(_playerId);
 
@@ -134,9 +142,9 @@ void scoreflexShowPlayerSettings()
 	[Scoreflex showPlayerSettings:nil];
 }
 
-void scoreflexShowRanksPanel(const char *_leaderboardId, int _score)
+void scoreflexShowRanksPanel(const unichar *_leaderboardId, int _score)
 {
-	NSString *leaderboardId = [NSString stringWithCString:_leaderboardId encoding:NSUnicodeStringEncoding];
+	NSString *leaderboardId = fromUnichar(_leaderboardId);
 	NSString *score = [NSString stringWithFormat:@"%d", _score];
 	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
 	[Scoreflex showRanksPanel:leaderboardId params:params gravity:SXGravityTop];
@@ -157,41 +165,43 @@ void scoreflexStopPlayingSession()
 	[Scoreflex stopPlayingSession];
 }
 
-void scoreflexSubmitTurn(const char *_challengeInstanceId)
+void scoreflexSubmitTurn(const unichar *_challengeInstanceId)
 {
-	NSString *challengeInstanceId = [NSString stringWithCString:_challengeInstanceId encoding:NSUnicodeStringEncoding];
+	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
 	[Scoreflex submitTurn:challengeInstanceId params:nil
 		handler:^(SXResponse *response , NSError *error) {
-			UnitySendMessage(scoreflexUnityObjectName, "HandleSubmitTurn", "success");
+			NSString *message = error == nil ? [NSString stringWithFormat:@"failure: %@",[error localizedDescription]] : @"success";
+			UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmitTurn", [message UTF8String]);
 			NSLog(@"SubmitTurn Returned");
 		}
 	];
 }
 
-void scoreflexSubmitScore(const char *_leaderboardId, int _score)
+void scoreflexSubmitScore(const unichar *_leaderboardId, int _score)
 {
-	NSString *leaderboardId = [NSString stringWithCString:_leaderboardId encoding:NSUnicodeStringEncoding];
+	NSString *leaderboardId = fromUnichar(_leaderboardId);
 	NSString *score = [NSString stringWithFormat:@"%d", _score];
 	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
 	[Scoreflex submitScore:leaderboardId params:params
 		handler:^(SXResponse *response , NSError *error) {
-			UnitySendMessage(scoreflexUnityObjectName, "HandleSubmitScore", "success");
+			NSString *message = error == nil ? [NSString stringWithFormat:@"failure: %@",[error localizedDescription]] : @"success";
+			UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmitScore", [message UTF8String]);
 			NSLog(@"SubmitScore Returned");
 		}
 	];
 }
 
-void scoreflexSubmitScoreAndShowRanksPanel(const char *_leaderboardId, int _score)
+void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _score)
 {
-	NSString *leaderboardId = [NSString stringWithCString:_leaderboardId encoding:NSUnicodeStringEncoding];
+	NSString *leaderboardId = fromUnichar(_leaderboardId);
 	NSString *score = [NSString stringWithFormat:@"%d", _score];
 	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
 	[Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:SXGravityTop];
 }
 
-void scoreflexSubmitTurnAndShowChallengeDetail(const char *_challengeInstanceId)
+void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId)
 {
-	NSString *challengeInstanceId = [NSString stringWithCString:_challengeInstanceId encoding:NSUnicodeStringEncoding];
+	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
 	
 	[Scoreflex submitTurnAndShowChallengeDetail:challengeInstanceId params:nil];
 }

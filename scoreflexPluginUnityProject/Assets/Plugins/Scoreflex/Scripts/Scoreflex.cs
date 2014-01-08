@@ -25,14 +25,16 @@ public class Scoreflex : MonoBehaviour
 		}
 	}
 
-	public System.Action SubmitTurnCallback = null;
-	public System.Action SubmitScoreCallback = null;
+	public System.Action<bool> SubmitTurnCallback = null;
+	public System.Action<bool> SubmitScoreCallback = null;
 
 	void HandleSubmitTurn(string figure)
 	{
+		bool success = figure.StartsWith("success");
+		if(!success) Debug.LogError("Scoreflex: HandleSubmitTurn: " + figure);
 		if(SubmitTurnCallback != null)
 		{
-			SubmitTurnCallback();
+			SubmitTurnCallback(success);
 		}
 		else
 		{
@@ -42,9 +44,11 @@ public class Scoreflex : MonoBehaviour
 	
 	void HandleSubmitScore(string figure)
 	{
+		bool success = figure.StartsWith("success");
+		if(!success) Debug.LogError("Scoreflex: HandleSubmitScore: " + figure);
 		if(SubmitScoreCallback != null)
 		{
-			SubmitScoreCallback();
+			SubmitScoreCallback(success);
 		}
 		else
 		{
