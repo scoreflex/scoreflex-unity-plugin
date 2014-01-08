@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class InvaderSpawner : MonoBehaviour
@@ -13,26 +13,29 @@ public class InvaderSpawner : MonoBehaviour
 
 	void ResetClock()
 	{
-		countdown = baseTime / Mathf.Pow((float)(ScoreModel.instance.hits + 1), difficultyCurve);
+		countdown = baseTime / Mathf.Pow((float)(GameState.hits + 1), difficultyCurve);
 	}
 	
 	void Update ()
 	{
-		countdown -= Time.deltaTime;
-
-		if(countdown < 0f && prefabs.Length > 0)
+		if(GameState.live)
 		{
-			GameObject prefab = prefabs[Random.Range(0, prefabs.Length)];
+			countdown -= Time.deltaTime;
 
-			float radians = (Random.value * Mathf.PI * 2f);
-			Vector3 offset = new Vector3 {
-				x = Mathf.Sin (radians) * radius,
-				z = Mathf.Cos (radians) * radius
-			};
+			if(countdown < 0f && prefabs.Length > 0)
+			{
+				GameObject prefab = prefabs[Random.Range(0, prefabs.Length)];
 
-			GameObject.Instantiate(prefab, transform.position + offset, prefab.transform.rotation);
+				float radians = (Random.value * Mathf.PI * 2f);
+				Vector3 offset = new Vector3 {
+					x = Mathf.Sin (radians) * radius,
+					z = Mathf.Cos (radians) * radius
+				};
 
-			ResetClock();
+				GameObject.Instantiate(prefab, transform.position + offset, prefab.transform.rotation);
+
+				ResetClock();
+			}
 		}
 	}
 }

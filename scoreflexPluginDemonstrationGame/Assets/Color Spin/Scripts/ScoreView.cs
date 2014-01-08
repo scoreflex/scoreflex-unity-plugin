@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(TextMesh))]
@@ -16,9 +16,9 @@ public class ScoreView : MonoBehaviour
 	
 	void Update ()
 	{
-		if(ScoreModel.instance.points != lastObservedScore)
+		if(GameState.points != lastObservedScore)
 		{
-			textMesh.text = string.Format(format, ScoreModel.instance.points);
+			textMesh.text = string.Format(format, GameState.points);
 		}
 	}
 }

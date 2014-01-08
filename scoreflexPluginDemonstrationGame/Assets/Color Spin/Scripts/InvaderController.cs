@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class InvaderController : MonoBehaviour
@@ -21,8 +21,15 @@ public class InvaderController : MonoBehaviour
 
 	void Update ()
 	{
-		Vector3 step = (targetPosition - transform.position).normalized * Time.deltaTime * unitsPerSecond;
-		transform.position = transform.position + step;
+		if(GameState.live)
+		{
+			Vector3 step = (targetPosition - transform.position).normalized * Time.deltaTime * unitsPerSecond;
+			transform.position = transform.position + step;
+		}
+		else
+		{
+			GameObject.Destroy(gameObject);
+		}
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -40,11 +47,11 @@ public class InvaderController : MonoBehaviour
 			{
 				if(slice.identity == identity)
 				{
-					ScoreModel.instance.hits++;
+					GameState.hits++;
 				}
 				else
 				{
-					ScoreModel.instance.misses++;
+					GameState.misses++;
 				}
 
 				live = false;
