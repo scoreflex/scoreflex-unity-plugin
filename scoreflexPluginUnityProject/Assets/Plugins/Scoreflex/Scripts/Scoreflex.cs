@@ -1,23 +1,59 @@
 ﻿using UnityEngine;
 using System.Runtime.InteropServices;
-using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
 public class Scoreflex : MonoBehaviour
 {
+	public class View
+	{
+		public readonly int handle;
+
+		public View(int _handle)
+		{
+			handle = _handle;
+		}
+
+		public void Close()
+		{
+			Scoreflex.scoreflexHidePanelView(handle);
+		}
+	}
+
 	public static Scoreflex Instance { get; private set; }
 
-	public string id;
-	public string secret;
-	public bool sandbox;
-	
+	public string ClientId;
+	public string ClientSecret;
+	public bool Sandbox;
+
+	private bool initialized = false;
+
+	public bool Live {
+		get {
+			return initialized;
+		}
+	}
+
+	private const string ErrorNotLive = "Scoreflex: Method called while not live.";
+
 	void Awake()
 	{
 		if(Instance == null)
 		{
-			scoreflexInitialize(id, secret, sandbox);
+			try
+			{
+				scoreflexInitialize(ClientId, ClientSecret, Sandbox);
+				scoreflexSetUnityObjectName(gameObject.name);
+
+				initialized = true;
+			}
+			catch(System.EntryPointNotFoundException)
+			{
+				Debug.LogWarning("Failed to boot Scoreflex; not linked (EntryPointNotFoundException).");
+				initialized = false;
+			}
 			GameObject.DontDestroyOnLoad(gameObject);
 			Instance = this;
-			scoreflexSetUnityObjectName(gameObject.name);
 		}
 		else if(Instance != this)
 		{
@@ -25,39 +61,57 @@ public class Scoreflex : MonoBehaviour
 		}
 	}
 
-	public System.Action<bool> SubmitTurnCallback = null;
-	public System.Action<bool> SubmitScoreCallback = null;
+	private readonly Dictionary<string,System.Action<bool,Dictionary<string,object>>> APICallbacks = new Dictionary<string,System.Action<bool,Dictionary<string,object>>>();
 
-	void HandleSubmitTurn(string figure)
+	void HandleAPICallback(string figure)
 	{
-		bool success = figure.StartsWith("success");
-		if(!success) Debug.LogError("Scoreflex: HandleSubmitTurn: " + figure);
-		if(SubmitTurnCallback != null)
+		if(figure.Contains(":"))
 		{
-			SubmitTurnCallback(success);
+			bool success = figure.Contains("success");
+			string handlerKey = figure.Split(':')[0];
+			if(SubmitCallbacks.ContainsKey(handlerKey))
+			{
+				string jsonString = figure.Substring(handlerKey.Length + ":success:".Length); // :failure is the same length
+
+				var dict = MiniJSON.Json.Deserialize(jsonString) as Dictionary<string,object>;
+
+				APICallbacks[handlerKey](success, dict);
+			}
+			APICallbacks.Remove(handlerKey);
 		}
 		else
 		{
-			Debug.Log("Scoreflex: Turn submission completed. No handlers found.");
+			Debug.Log("Scoreflex: Received invalid callback code from native library: " + figure);
 		}
 	}
-	
-	void HandleSubmitScore(string figure)
+
+	private readonly Dictionary<string,System.Action<bool>> SubmitCallbacks = new Dictionary<string,System.Action<bool>>();
+
+	void HandleSubmit(string figure)
 	{
-		bool success = figure.StartsWith("success");
-		if(!success) Debug.LogError("Scoreflex: HandleSubmitScore: " + figure);
-		if(SubmitScoreCallback != null)
+		if(figure.Contains(":"))
 		{
-			SubmitScoreCallback(success);
+			bool success = figure.Contains("success");
+			string handlerKey = figure.Split(':')[0];
+			if(SubmitCallbacks.ContainsKey(handlerKey))
+			{
+				SubmitCallbacks[handlerKey](success);
+			}
+			SubmitCallbacks.Remove(handlerKey);
 		}
 		else
 		{
-			Debug.Log("Scoreflex: Score submission completed. No handlers found.");
+			Debug.Log("Scoreflex: Received invalid callback code from native library: " + figure);
 		}
 	}
 
 	public string GetPlayerId()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return string.Empty;
+		}
+
 		var buffer = new byte[512];
 		scoreflexGetPlayerId(buffer, buffer.Length);
 		int stringLength = 0;
@@ -68,120 +122,352 @@ public class Scoreflex : MonoBehaviour
 	
 	public float GetPlayingTime()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return 0f;
+		}
+
 		return scoreflexGetPlayingTime();
+	}
+	
+	public void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
+	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowFullscreenView(resource, json);
+	}
+
+	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null)
+	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return null;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		int handle = scoreflexShowPanelView(resource, json);
+
+		return new View(handle);
 	}
 
 	public void SetDeviceToken(string deviceToken)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
 		scoreflexSetDeviceToken(deviceToken);
 	}
 
-	public void ShowDeveloperGames(string developerId)
+	public void ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowDeveloperGames(developerId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowDeveloperGames(developerId, json);
 	}
 
-	public void ShowDeveloperProfile(string developerId)
+	public void ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowDeveloperProfile(developerId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowDeveloperProfile(developerId, json);
 	}
 
-	public void ShowGameDetails(string gameId)
+	public void ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowGameDetails(gameId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowGameDetails(gameId, json);
 	}
 
-	public void ShowGamePlayers(string gameId)
+	public void ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowGamePlayers(gameId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowGamePlayers(gameId, json);
 	}
 
-	public void ShowLeaderboard(string leaderboardId)
+	public void ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowLeaderboard(leaderboardId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowLeaderboard(leaderboardId, json);
 	}
 
-	public void ShowLeaderboardOverview(string leaderboardId)
+	public void ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowLeaderboardOverview(leaderboardId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowLeaderboardOverview(leaderboardId, json);
 	}
 
-	public void ShowPlayerChallenges()
+	public void ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerChallenges();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerChallenges(json);
 	}
 
-	public void ShowPlayerFriends(string playerId = null)
+	public void ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerFriends(playerId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerFriends(playerId, json);
 	}
 
-	public void ShowPlayerNewsFeed()
+	public void ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerNewsFeed();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerNewsFeed(json);
 	}
 
-	public void ShowPlayerProfile(string playerId = null)
+	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerProfile(playerId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerProfile(playerId, json);
 	}
 	
-	public void ShowPlayerProfileEdit()
+	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerProfileEdit();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerProfileEdit(json);
 	}
 
-	public void ShowPlayerRating()
+	public void ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerRating();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerRating(json);
 	}
 	
-	public void ShowPlayerSettings()
+	public void ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowPlayerSettings();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowPlayerSettings(json);
 	}
 
-	public void ShowRanksPanel(string leaderboardId, int score)
+	public void ShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null)
 	{
-		scoreflexShowRanksPanel(leaderboardId, score);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowRanksPanel(leaderboardId, score, json);
 	}
 
-	public void ShowSearch()
+	public void HideRanksPanel()
 	{
-		scoreflexShowSearch();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
+		scoreflexHideRanksPanel();
+	}
+
+	public void ShowSearch(Dictionary<string,object> parameters = null)
+	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexShowSearch(json);
 	}
 
 	public void StartPlayingSession()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
 		scoreflexStartPlayingSession();
 	}
 
 	public void StopPlayingSession()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
 		scoreflexStopPlayingSession();
 	}
 
-	public void SubmitTurn(string challengeInstanceId)
+	private static string CreateKeyForCallbackDictionary(Dictionary<string,System.Action<bool>> dictionary)
 	{
-		scoreflexSubmitTurn(challengeInstanceId);
+		string key;
+		var random = new System.Random();	
+		do {
+			key = random.Next().ToString();
+		} while(dictionary.ContainsKey(key));
+		return key;
 	}
 
-	public void SubmitScore(string leaderboardId, int score)
+	public void SubmitTurn(string challengeInstanceId, Dictionary<string,object> parameters = null, System.Action<bool> callback = null)
 	{
-		scoreflexSubmitScore(leaderboardId, score);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			if(callback != null) callback(false);
+			return;
+		}
+
+		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(SubmitCallbacks);
+		if(handlerKey != null) SubmitCallbacks[handlerKey] = callback;
+
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexSubmitTurn(challengeInstanceId, json, handlerKey);
 	}
 
-	public void SubmitScoreAndShowRanksPanel(string leaderboardId, int score)
+	public void SubmitScore(string leaderboardId, int score, Dictionary<string,object> parameters = null, System.Action<bool> callback = null)
 	{
-		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			if(callback != null) callback(false);
+			return;
+		}
+		
+		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(SubmitCallbacks);
+		if(handlerKey != null) SubmitCallbacks[handlerKey] = callback;
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexSubmitScore(leaderboardId, score, json, handlerKey);
 	}
 
-	public void SubmitTurnAndShowChallengeDetail(string challengeLeaderboardId)
+	public void SubmitScoreAndShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null)
 	{
-		scoreflexSubmitTurnAndShowChallengeDetail(challengeLeaderboardId);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score, json);
 	}
 
+	public void SubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, Dictionary<string,object> parameters = null)
+	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+
+		scoreflexSubmitTurnAndShowChallengeDetail(challengeLeaderboardId, json);
+	}
+	
 	#region Imports
+	
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexGet(string resource, string json = null, string handler = null);
+	
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexPut(string resource, string json = null, string handler = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexPost(string resource, string json = null, string handler = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexPostEventually(string resource, string json = null, string handler = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexDelete(string resource, string json = null, string handler = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowFullscreenView(string resource, string json = null);
+	
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern int scoreflexShowPanelView(string resource, string json = null);
+	
+	[DllImport ("__Internal")]
+	private static extern void scoreflexHidePanelView(int handle);
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexSetUnityObjectName(string unityObjectName);
 
@@ -198,49 +484,52 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexSetDeviceToken(string deviceToken);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowDeveloperGames(string developerId);
+	private static extern void scoreflexShowDeveloperGames(string developerId, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowDeveloperProfile(string developerId);
+	private static extern void scoreflexShowDeveloperProfile(string developerId, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowGameDetails(string gameId);
+	private static extern void scoreflexShowGameDetails(string gameId, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowGamePlayers(string gameId);
+	private static extern void scoreflexShowGamePlayers(string gameId, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowLeaderboard(string leaderboardId);
+	private static extern void scoreflexShowLeaderboard(string leaderboardId, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowLeaderboardOverview(string leaderboardId);
+	private static extern void scoreflexShowLeaderboardOverview(string leaderboardId, string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerChallenges(string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerFriends(string playerId = null, string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerNewsFeed(string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerProfile(string playerId = null, string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerProfileEdit(string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerRating(string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowPlayerSettings(string json = null);
+
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowRanksPanel(string leaderboardId, int score, string json = null);
 
 	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerChallenges();
-
-	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowPlayerFriends(string playerId = null);
-
-	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerNewsFeed();
-
-	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowPlayerProfile(string playerId = null);
-
-	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerProfileEdit();
-
-	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerRating();
-
-	[DllImport ("__Internal")]
-	private static extern void scoreflexShowPlayerSettings();
-
-	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowRanksPanel(string leaderboardId, int score);
+	private static extern void scoreflexHideRanksPanel();
 	
-	[DllImport ("__Internal")]
-	private static extern void scoreflexShowSearch();
+	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
+	private static extern void scoreflexShowSearch(string json = null);
 	
 	[DllImport ("__Internal")]
 	private static extern void scoreflexStartPlayingSession();
@@ -249,16 +538,16 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexStopPlayingSession();
 	
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexSubmitTurn(string challengeInstanceId);
+	private static extern void scoreflexSubmitTurn(string challengeInstanceId, string json = null, string handler = null);
 	
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexSubmitScore(string leaderboardId, int score);
+	private static extern void scoreflexSubmitScore(string leaderboardId, int score, string json = null, string handler = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexSubmitScoreAndShowRanksPanel(string leaderboardId, int score);
+	private static extern void scoreflexSubmitScoreAndShowRanksPanel(string leaderboardId, int score, string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexSubmitTurnAndShowChallengeDetail(string challengeLeaderboardId);
+	private static extern void scoreflexSubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, string json = null);
 	#endregion
 }
 

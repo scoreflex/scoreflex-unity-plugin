@@ -1,5 +1,9 @@
 #import <Scoreflex/Scoreflex.h>
 
+NSString * scoreflexUnityObjectName = @"Scoreflex";
+UIView * scoreflexRankPanelView = nil;
+NSMutableDictionary *scoreflexPanelViews = nil;
+
 NSString * fromUnichar(const unichar *source)
 {
 	size_t length = 0; while(source[length] != 0) length++;
@@ -13,7 +17,49 @@ NSString * stringOrNil(const unichar *source)
 	return result;
 }
 
-NSString * scoreflexUnityObjectName = @"Scoreflex";
+id kvccFromUnichar(const unichar *source)
+{
+	id result = nil;
+
+	NSString *stage1 = stringOrNil(source);
+	
+	if(stage1 != nil)
+	{
+		NSError *error = nil;
+	
+		NSData *stage2 = [stage1 dataUsingEncoding:NSUTF8StringEncoding];
+		result = [NSJSONSerialization JSONObjectWithData:stage2 options:kNilOptions error:&error];
+		
+		if(error != nil)
+		{
+			NSLog(@"Scoreflex JSON Failure: '%@', while attempting to parse '%@'.", [error localizedDescription], stage1);
+		}
+	}
+		
+	return result;
+}
+
+id kvccWithScore(const unichar *source, int score)
+{
+	id parsed = kvccFromUnichar(source);
+	id result = nil;
+	
+	NSString * key = @"score";
+	NSString * value = [NSString stringWithFormat:@"%d", score];
+	
+	if(parsed == nil || ![parsed isMemberOfClass:[NSDictionary class]])
+	{
+		result = [NSDictionary dictionaryWithObject:value forKey:key];
+	}
+	else
+	{
+		result = [NSMutableDictionary dictionaryWithCapacity:([parsed count] + 1)];
+		[result addEntriesFromDictionary:parsed];
+		[result setObject:value forKey:key];
+	}
+	
+	return result;
+}
 
 void scoreflexSetUnityObjectName(const unichar *_unityObjectName)
 {
@@ -43,6 +89,50 @@ float scoreflexGetPlayingTime()
 	return [playTime floatValue];
 }
 
+void scoreflexShowFullscreenView(const unichar *_resource, const unichar *_params)
+{
+	NSString *resource = fromUnichar(_resource);
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showFullScreenView:resource params:params];
+}
+
+int scoreflexShowPanelView(const unichar *_resource, const unichar *_params)
+{
+	if(scoreflexPanelViews == nil)
+		scoreflexPanelViews = [[NSMutableDictionary alloc] init];
+
+	NSString *resource = fromUnichar(_resource);
+	id params = kvccFromUnichar(_params);
+	SXView *view = [Scoreflex showPanelView:resource params:params gavity:SXGravityTop]; // sic
+	
+	int key;
+	NSNumber *keyAsNumber;
+	do {
+		key = rand();
+		keyAsNumber = [NSNumber numberWithInt:key];
+	} while ([scoreflexPanelViews objectForKey:keyAsNumber] != nil);
+	
+	[scoreflexPanelViews setObject:view forKey:keyAsNumber];
+	
+	return key;
+}
+
+void scoreflexHidePanelView(int key)
+{
+	if(scoreflexPanelViews != nil)
+	{
+		NSNumber *keyAsNumber = [NSNumber numberWithInt:key];
+		
+		SXView *view = [scoreflexPanelViews objectForKey:keyAsNumber];
+		
+		if(view != nil)
+		{
+			[view close];
+			[scoreflexPanelViews removeObjectForKey:keyAsNumber];
+		}
+	}
+}
+
 // handleNotification?
 
 // handleURL?
@@ -59,100 +149,123 @@ void scoreflexSetDeviceToken(const unichar *_deviceToken)
 	[Scoreflex setDeviceToken:deviceToken];
 }
 
-void scoreflexShowDeveloperGames(const unichar *_developerId)
+void scoreflexShowDeveloperGames(const unichar *_developerId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+
 	NSString *developerId = fromUnichar(_developerId);
 	
-	[Scoreflex showDeveloperGames:developerId params:nil];
+	[Scoreflex showDeveloperGames:developerId params:params];
 }
 
-void scoreflexShowDeveloperProfile(const unichar *_developerId)
+void scoreflexShowDeveloperProfile(const unichar *_developerId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *developerId = fromUnichar(_developerId);
 	
-	[Scoreflex showDeveloperProfile:developerId params:nil];
+	[Scoreflex showDeveloperProfile:developerId params:params];
 }
 
-// showFullScreenView ?
-
-void scoreflexShowGameDetails(const unichar *_gameId)
+void scoreflexShowGameDetails(const unichar *_gameId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *gameId = fromUnichar(_gameId);
 	
-	[Scoreflex showGameDetails:gameId params:nil];
+	[Scoreflex showGameDetails:gameId params:params];
 }
 
-void scoreflexShowGamePlayers(const unichar *_gameId)
+void scoreflexShowGamePlayers(const unichar *_gameId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *gameId = fromUnichar(_gameId);
 	
-	[Scoreflex showGamePlayers:gameId params:nil];
+	[Scoreflex showGamePlayers:gameId params:params];
 }
 
-void scoreflexShowLeaderboard(const unichar *_leaderboardId)
+void scoreflexShowLeaderboard(const unichar *_leaderboardId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	[Scoreflex showLeaderboard:leaderboardId params:nil];
+	[Scoreflex showLeaderboard:leaderboardId params:params];
 }
 
 
-void scoreflexShowLeaderboardOverview(const unichar *_leaderboardId)
+void scoreflexShowLeaderboardOverview(const unichar *_leaderboardId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	[Scoreflex showLeaderboardOverview:leaderboardId params:nil];
+	[Scoreflex showLeaderboardOverview:leaderboardId params:params];
 }
 
-//showPanelView ?
-
-void scoreflexShowPlayerChallenges()
+void scoreflexShowPlayerChallenges(const unichar *_params)
 {
-	[Scoreflex showPlayerChallenges:nil];
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showPlayerChallenges:params];
 }
 
-void scoreflexShowPlayerFriends(const unichar *_playerId)
+void scoreflexShowPlayerFriends(const unichar *_playerId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *playerId = stringOrNil(_playerId);
-	[Scoreflex showPlayerFriends:playerId params:nil];
+	[Scoreflex showPlayerFriends:playerId params:params];
 }
 
-void scoreflexShowPlayerNewsFeed()
+void scoreflexShowPlayerNewsFeed(const unichar *_params)
 {
-	[Scoreflex showPlayerNewsFeed:nil];
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showPlayerNewsFeed:params];
 }
 
-void scoreflexShowPlayerProfile(const unichar *_playerId)
+void scoreflexShowPlayerProfile(const unichar *_playerId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
+	
 	NSString *playerId = stringOrNil(_playerId);
 
-	[Scoreflex showPlayerProfile:playerId params:nil];
+	[Scoreflex showPlayerProfile:playerId params:params];
 }
 
-void scoreflexShowPlayerProfileEdit()
+void scoreflexShowPlayerProfileEdit(const unichar *_params)
 {
-	[Scoreflex showPlayerProfileEdit:nil];
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showPlayerProfileEdit:params];
 }
 
-void scoreflexShowPlayerRating()
+void scoreflexShowPlayerRating(const unichar *_params)
 {
-	[Scoreflex showPlayerRating:nil];
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showPlayerRating:params];
 }
 
-void scoreflexShowPlayerSettings()
+void scoreflexShowPlayerSettings(const unichar *_params)
 {
-	[Scoreflex showPlayerSettings:nil];
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showPlayerSettings:params];
 }
 
-void scoreflexShowRanksPanel(const unichar *_leaderboardId, int _score)
+void scoreflexShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params)
 {
+	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	NSString *score = [NSString stringWithFormat:@"%d", _score];
-	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
-	[Scoreflex showRanksPanel:leaderboardId params:params gravity:SXGravityTop];
+	scoreflexRankPanelView = [Scoreflex showRanksPanel:leaderboardId params:params gravity:SXGravityTop];
 }
 
-void scoreflexShowSearch()
+void scoreflexHideRanksPanel()
 {
-	[Scoreflex showSearch:nil];
+	if(scoreflexRankPanelView != nil)
+		[scoreflexRankPanelView removeFromSuperview];
+}
+
+void scoreflexShowSearch(const unichar *_params)
+{
+	id params = kvccFromUnichar(_params);
+	[Scoreflex showSearch:params];
 }
 
 void scoreflexStartPlayingSession()
@@ -165,43 +278,143 @@ void scoreflexStopPlayingSession()
 	[Scoreflex stopPlayingSession];
 }
 
-void scoreflexSubmitTurn(const unichar *_challengeInstanceId)
+void scoreflexAPICallback(SXResponse *response, NSError *error, NSString *handler)
 {
+	if(handler != nil)
+	{
+		NSString *json = nil;
+		
+		if(error == nil)
+		{
+			NSData *_json = [NSJSONSerialization dataWithJSONObject:[response object] options:0 error:&error];
+			json = [[NSString alloc] initWithData:_json encoding:NSUTF8StringEncoding];
+		}
+		
+		NSString *message;
+		
+		if(error == nil)
+		{
+			message = [NSString stringWithFormat:@"%@:success:%@", handler, json];
+		}
+		else
+		{
+			message = [NSString stringWithFormat:@"%@:failure:%@", handler, [error localizedDescription]];
+		}
+		
+		UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleAPICallback", [message UTF8String]);
+	}
+}
+
+void scoreflexGet(const unichar *_resource, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
+	NSString *resource = fromUnichar(_resource);
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex get:resource params:params handler:^(SXResponse *response, NSError *error) {
+			scoreflexAPICallback(response, error, handler);
+	}];
+}
+
+void scoreflexPut(const unichar *_resource, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
+	NSString *resource = fromUnichar(_resource);
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex put:resource params:params handler:^(SXResponse *response, NSError *error) {
+			scoreflexAPICallback(response, error, handler);
+	}];
+}
+
+void scoreflexPost(const unichar *_resource, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
+	NSString *resource = fromUnichar(_resource);
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex post:resource params:params handler:^(SXResponse *response, NSError *error) {
+			scoreflexAPICallback(response, error, handler);
+	}];
+}
+
+void scoreflexPostEventually(const unichar *_resource, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
+	NSString *resource = fromUnichar(_resource);
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex postEventually:resource params:params handler:^(SXResponse *response, NSError *error) {
+			scoreflexAPICallback(response, error, handler);
+	}];
+}
+
+void scoreflexDelete(const unichar *_resource, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
+	NSString *resource = fromUnichar(_resource);
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex delete:resource params:params handler:^(SXResponse *response, NSError *error) {
+			scoreflexAPICallback(response, error, handler);
+	}];
+}
+
+void scoreflexSubmitTurn(const unichar *_challengeInstanceId, const unichar *_params, const unichar *_handler)
+{
+	id params = kvccFromUnichar(_params);
 	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
-	[Scoreflex submitTurn:challengeInstanceId params:nil
+	NSString *handler = stringOrNil(_handler);
+	[Scoreflex submitTurn:challengeInstanceId params:params
 		handler:^(SXResponse *response , NSError *error) {
-			NSString *message = error == nil ? [NSString stringWithFormat:@"failure: %@",[error localizedDescription]] : @"success";
-			UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmitTurn", [message UTF8String]);
+			if(handler != nil)
+			{
+				NSString *message;
+				if(error == nil)
+				{
+					message = [NSString stringWithFormat:@"%@:success", handler];
+				}
+				else
+				{
+					message = [NSString stringWithFormat:@"%@:failure: %@", handler, [error localizedDescription]];
+				}
+				UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
+			}
 			NSLog(@"SubmitTurn Returned");
 		}
 	];
 }
 
-void scoreflexSubmitScore(const unichar *_leaderboardId, int _score)
+void scoreflexSubmitScore(const unichar *_leaderboardId, int _score, const unichar *_params, const unichar *_handler)
 {
+	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	NSString *score = [NSString stringWithFormat:@"%d", _score];
-	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
+	NSString *handler = stringOrNil(_handler);
 	[Scoreflex submitScore:leaderboardId params:params
 		handler:^(SXResponse *response , NSError *error) {
-			NSString *message = error == nil ? [NSString stringWithFormat:@"failure: %@",[error localizedDescription]] : @"success";
-			UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmitScore", [message UTF8String]);
+			if(handler != nil)
+			{
+				NSString *message;
+				if(error == nil)
+				{
+					message = [NSString stringWithFormat:@"%@:success", handler];
+				}
+				else
+				{
+					message = [NSString stringWithFormat:@"%@:failure: %@", handler, [error localizedDescription]];
+				}
+				UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
+			}
 			NSLog(@"SubmitScore Returned");
 		}
 	];
 }
 
-void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _score)
+void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params)
 {
+	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	NSString *score = [NSString stringWithFormat:@"%d", _score];
-	NSDictionary *params = [NSDictionary dictionaryWithObject:score forKey:@"score"];
-	[Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:SXGravityTop];
+	scoreflexRankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:SXGravityTop];
 }
 
-void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId)
+void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId, const unichar *_params)
 {
+	id params = kvccFromUnichar(_params);
 	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
-	
-	[Scoreflex submitTurnAndShowChallengeDetail:challengeInstanceId params:nil];
+	[Scoreflex submitTurnAndShowChallengeDetail:challengeInstanceId params:params];
 }
