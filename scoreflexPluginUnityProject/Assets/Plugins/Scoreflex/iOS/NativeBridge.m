@@ -96,14 +96,16 @@ void scoreflexShowFullscreenView(const unichar *_resource, const unichar *_param
 	[Scoreflex showFullScreenView:resource params:params];
 }
 
-int scoreflexShowPanelView(const unichar *_resource, const unichar *_params)
+int scoreflexShowPanelView(const unichar *_resource, const unichar *_params, int isOnTop)
 {
 	if(scoreflexPanelViews == nil)
 		scoreflexPanelViews = [[NSMutableDictionary alloc] init];
+		
+	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 
 	NSString *resource = fromUnichar(_resource);
 	id params = kvccFromUnichar(_params);
-	SXView *view = [Scoreflex showPanelView:resource params:params gavity:SXGravityTop]; // sic
+	SXView *view = [Scoreflex showPanelView:resource params:params gavity:gravity]; // sic
 	
 	int key;
 	NSNumber *keyAsNumber;
@@ -249,11 +251,12 @@ void scoreflexShowPlayerSettings(const unichar *_params)
 	[Scoreflex showPlayerSettings:params];
 }
 
-void scoreflexShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params)
+void scoreflexShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params, int isOnTop)
 {
+	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	scoreflexRankPanelView = [Scoreflex showRanksPanel:leaderboardId params:params gravity:SXGravityTop];
+	scoreflexRankPanelView = [Scoreflex showRanksPanel:leaderboardId params:params gravity:gravity];
 }
 
 void scoreflexHideRanksPanel()
@@ -405,11 +408,12 @@ void scoreflexSubmitScore(const unichar *_leaderboardId, int _score, const unich
 	];
 }
 
-void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params)
+void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _score, const unichar *_params, int isOnTop)
 {
+	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	scoreflexRankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:SXGravityTop];
+	scoreflexRankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:gravity];
 }
 
 void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId, const unichar *_params)

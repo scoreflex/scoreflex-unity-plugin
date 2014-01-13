@@ -5,6 +5,8 @@ using System.Text;
 
 public class Scoreflex : MonoBehaviour
 {
+	public enum Gravity { Bottom = 0, Top = 1 };
+
 	public class View
 	{
 		public readonly int handle;
@@ -142,7 +144,7 @@ public class Scoreflex : MonoBehaviour
 		scoreflexShowFullscreenView(resource, json);
 	}
 
-	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null)
+	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
@@ -151,7 +153,7 @@ public class Scoreflex : MonoBehaviour
 		
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
-		int handle = scoreflexShowPanelView(resource, json);
+		int handle = scoreflexShowPanelView(resource, json, (int) gravity);
 
 		return new View(handle);
 	}
@@ -322,7 +324,7 @@ public class Scoreflex : MonoBehaviour
 		scoreflexShowPlayerSettings(json);
 	}
 
-	public void ShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null)
+	public void ShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
@@ -331,7 +333,7 @@ public class Scoreflex : MonoBehaviour
 		
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
-		scoreflexShowRanksPanel(leaderboardId, score, json);
+		scoreflexShowRanksPanel(leaderboardId, score, json, (int) gravity);
 	}
 
 	public void HideRanksPanel()
@@ -418,7 +420,7 @@ public class Scoreflex : MonoBehaviour
 		scoreflexSubmitScore(leaderboardId, score, json, handlerKey);
 	}
 
-	public void SubmitScoreAndShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null)
+	public void SubmitScoreAndShowRanksPanel(string leaderboardId, int score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
@@ -427,7 +429,7 @@ public class Scoreflex : MonoBehaviour
 		
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
-		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score, json);
+		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score, json, (int) gravity);
 	}
 
 	public void SubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, Dictionary<string,object> parameters = null)
@@ -463,7 +465,7 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexShowFullscreenView(string resource, string json = null);
 	
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern int scoreflexShowPanelView(string resource, string json = null);
+	private static extern int scoreflexShowPanelView(string resource, string json = null, int isOnTop = 1);
 	
 	[DllImport ("__Internal")]
 	private static extern void scoreflexHidePanelView(int handle);
@@ -523,7 +525,7 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexShowPlayerSettings(string json = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexShowRanksPanel(string leaderboardId, int score, string json = null);
+	private static extern void scoreflexShowRanksPanel(string leaderboardId, int score, string json = null, int isOnTop = 1);
 
 	[DllImport ("__Internal")]
 	private static extern void scoreflexHideRanksPanel();
@@ -544,7 +546,7 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexSubmitScore(string leaderboardId, int score, string json = null, string handler = null);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexSubmitScoreAndShowRanksPanel(string leaderboardId, int score, string json = null);
+	private static extern void scoreflexSubmitScoreAndShowRanksPanel(string leaderboardId, int score, string json = null, int isOnTop = 1);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexSubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, string json = null);
