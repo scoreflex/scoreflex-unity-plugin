@@ -44,7 +44,8 @@ public class Scoreflex : MonoBehaviour
 		{
 			try
 			{
-				scoreflexInitialize(ClientId, ClientSecret, Sandbox);
+				scoreflexListenForChallenges();
+				scoreflexSetClientId(ClientId, ClientSecret, Sandbox);
 				scoreflexSetUnityObjectName(gameObject.name);
 
 				initialized = true;
@@ -60,6 +61,21 @@ public class Scoreflex : MonoBehaviour
 		else if(Instance != this)
 		{
 			GameObject.Destroy(gameObject);
+		}
+	}
+
+	public System.Action<Dictionary<string,object>> ChallengeHandlers = null;
+
+	void HandleChallenge(string figure)
+	{
+		if(ChallengeHandlers == null)
+		{
+			Debug.LogError("Scoreflex: Received challenge, but found no challenge handler! Please assign to Scoreflex.Instance.ChallengeHandlers");
+		}
+		else
+		{
+			var dict = MiniJSON.Json.Deserialize(figure) as Dictionary<string,object>;
+			ChallengeHandlers(dict);
 		}
 	}
 
@@ -474,10 +490,13 @@ public class Scoreflex : MonoBehaviour
 	private static extern void scoreflexSetUnityObjectName(string unityObjectName);
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
-	private static extern void scoreflexInitialize(string clientId, string secret, bool sandbox);
+	private static extern void scoreflexSetClientId(string clientId, string secret, bool sandbox);
 
 	[DllImport ("__Internal")]
 	private static extern void scoreflexGetPlayerId(byte[] buffer, int bufferLength);
+
+	[DllImport ("__Internal")]
+	private static extern void scoreflexListenForChallenges();
 	
 	[DllImport ("__Internal")]
 	private static extern float scoreflexGetPlayingTime();
