@@ -371,9 +371,9 @@ void scoreflexDelete(const unichar *_resource, const unichar *_params, const uni
 	}];
 }
 
-void scoreflexSubmitTurn(const unichar *_challengeInstanceId, const unichar *_params, const unichar *_handler)
+void scoreflexSubmitTurn(const unichar *_challengeInstanceId, int _score, const unichar *_params, const unichar *_handler)
 {
-	id params = kvccFromUnichar(_params);
+	id params = kvccWithScore(_params, _score);
 	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
 	NSString *handler = stringOrNil(_handler);
 	[Scoreflex submitTurn:challengeInstanceId params:params
@@ -429,9 +429,9 @@ void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int _s
 	scoreflexRankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:gravity];
 }
 
-void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId, const unichar *_params)
+void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId, int _score, const unichar *_params)
 {
-	id params = kvccFromUnichar(_params);
+	id params = kvccWithScore(_params, _score);
 	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
 	[Scoreflex submitTurnAndShowChallengeDetail:challengeInstanceId params:params];
 }
