@@ -349,7 +349,7 @@ public class Scoreflex : MonoBehaviour
 		
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
-		scoreflexShowRanksPanel(leaderboardId, long score, json, (int) gravity);
+		scoreflexShowRanksPanel(leaderboardId, score, json, (int) gravity);
 	}
 
 	public void HideRanksPanel()
