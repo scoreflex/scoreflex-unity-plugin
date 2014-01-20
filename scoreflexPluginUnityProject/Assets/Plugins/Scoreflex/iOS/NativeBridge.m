@@ -1,9 +1,31 @@
 #import <Scoreflex/Scoreflex.h>
 #include <stdint.h>
 
-NSString * scoreflexUnityObjectName = @"Scoreflex";
-UIView * scoreflexRankPanelView = nil;
-NSMutableDictionary *scoreflexPanelViews = nil;
+@interface ScoreflexBridgeState : NSObject
+@property (copy) NSString *unityObjectName;
+@property (assign) UIView *rankPanelView;
+@property (assign) NSMutableDictionary *panelViews;
+
++ (ScoreflexBridgeState *)instance;
+@end
+
+@implementation ScoreflexBridgeState
++ (ScoreflexBridgeState *)instance
+{
+    static ScoreflexBridgeState *_instance = nil;
+ 
+    if (_instance == nil) {
+        _instance  = [[[self class] alloc] init];
+    }
+	
+	_instance.unityObjectName = @"Scoreflex";
+	_instance.rankPanelView = nil;
+	_instance.panelViews = [[NSMutableDictionary alloc] init];
+	
+	return _instance;
+}
+@end
+
 
 NSString * fromUnichar(const unichar *source)
 {
@@ -46,8 +68,9 @@ id kvccWithScore(const unichar *source, int64_t score)
 	id result = nil;
 	
 	NSString * key = @"score";
-	NSString * value = [NSString stringWithFormat:@"%lld", (long long) score];
-	
+	NSNumber * value = [NSNumber numberWithLongLong:(long long)score];
+//	NSString * value = [NSString stringWithFormat:@"%lld", (long long) score];
+
 	if(parsed == nil || ![parsed isMemberOfClass:[NSDictionary class]])
 	{
 		result = [NSDictionary dictionaryWithObject:value forKey:key];
@@ -64,7 +87,8 @@ id kvccWithScore(const unichar *source, int64_t score)
 
 void scoreflexSetUnityObjectName(const unichar *_unityObjectName)
 {
-	scoreflexUnityObjectName = fromUnichar(_unityObjectName);
+	[ScoreflexBridgeState instance].unityObjectName = fromUnichar(_unityObjectName);
+	NSLog(@"Unity object name is now: %@", [ScoreflexBridgeState instance].unityObjectName);
 }
 
 void scoreflexSetClientId(const unichar *_id, const unichar *_secret, int _sandbox)
@@ -81,13 +105,21 @@ void scoreflexSetClientId(const unichar *_id, const unichar *_secret, int _sandb
 void scoreflexListenForChallenges()
 {
 	[[NSNotificationCenter defaultCenter] addObserverForName:SX_NOTIFICATION_START_CHALLENGE object:nil queue:nil usingBlock:^(NSNotification *note) {
-			id challengeConfig = [note valueForKey:SX_NOTIFICATION_START_CHALLENGE_CONFIG_KEY];
+			id challengeConfig = [[note userInfo] objectForKey:SX_NOTIFICATION_START_CHALLENGE_CONFIG_KEY];
 
 			NSError *error = nil;
+			NSString *json = nil;
 			NSData *_json = [NSJSONSerialization dataWithJSONObject:challengeConfig options:0 error:&error];
-			NSString *json = [[NSString alloc] initWithData:_json encoding:NSUTF8StringEncoding];
-		
-			UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleChallenge", [json UTF8String]);
+			
+			if(error == nil)
+			{
+				json = [[NSString alloc] initWithData:_json encoding:NSUTF8StringEncoding];
+				UnitySendMessage([[ScoreflexBridgeState instance].unityObjectName UTF8String], "HandleChallenge", [json UTF8String]);
+			}
+			else
+			{
+				NSLog(@"Scoreflex: Error receiving challenge specifications: %@", [error localizedDescription]);
+			}
 	}];
 }
 
@@ -112,9 +144,6 @@ void scoreflexShowFullscreenView(const unichar *_resource, const unichar *_param
 
 int scoreflexShowPanelView(const unichar *_resource, const unichar *_params, int isOnTop)
 {
-	if(scoreflexPanelViews == nil)
-		scoreflexPanelViews = [[NSMutableDictionary alloc] init];
-		
 	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 
 	NSString *resource = fromUnichar(_resource);
@@ -126,25 +155,25 @@ int scoreflexShowPanelView(const unichar *_resource, const unichar *_params, int
 	do {
 		key = rand();
 		keyAsNumber = [NSNumber numberWithInt:key];
-	} while ([scoreflexPanelViews objectForKey:keyAsNumber] != nil);
+	} while ([[ScoreflexBridgeState instance].panelViews objectForKey:keyAsNumber] != nil);
 	
-	[scoreflexPanelViews setObject:view forKey:keyAsNumber];
+	[[ScoreflexBridgeState instance].panelViews setObject:view forKey:keyAsNumber];
 	
 	return key;
 }
 
 void scoreflexHidePanelView(int key)
 {
-	if(scoreflexPanelViews != nil)
+	if([ScoreflexBridgeState instance].panelViews != nil)
 	{
 		NSNumber *keyAsNumber = [NSNumber numberWithInt:key];
 		
-		SXView *view = [scoreflexPanelViews objectForKey:keyAsNumber];
+		SXView *view = [[ScoreflexBridgeState instance].panelViews objectForKey:keyAsNumber];
 		
 		if(view != nil)
 		{
 			[view close];
-			[scoreflexPanelViews removeObjectForKey:keyAsNumber];
+			[[ScoreflexBridgeState instance].panelViews removeObjectForKey:keyAsNumber];
 		}
 	}
 }
@@ -270,13 +299,13 @@ void scoreflexShowRanksPanel(const unichar *_leaderboardId, int64_t _score, cons
 	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	scoreflexRankPanelView = [Scoreflex showRanksPanel:leaderboardId params:params gravity:gravity];
+	[ScoreflexBridgeState instance].rankPanelView = [Scoreflex showRanksPanel:leaderboardId params:params gravity:gravity];
 }
 
 void scoreflexHideRanksPanel()
 {
-	if(scoreflexRankPanelView != nil)
-		[scoreflexRankPanelView removeFromSuperview];
+	if([ScoreflexBridgeState instance].rankPanelView != nil)
+		[[ScoreflexBridgeState instance].rankPanelView removeFromSuperview];
 }
 
 void scoreflexShowSearch(const unichar *_params)
@@ -318,7 +347,7 @@ void scoreflexAPICallback(SXResponse *response, NSError *error, NSString *handle
 			message = [NSString stringWithFormat:@"%@:failure:%@", handler, [error localizedDescription]];
 		}
 		
-		UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleAPICallback", [message UTF8String]);
+		UnitySendMessage([[ScoreflexBridgeState instance].unityObjectName UTF8String], "HandleAPICallback", [message UTF8String]);
 	}
 }
 
@@ -372,12 +401,12 @@ void scoreflexDelete(const unichar *_resource, const unichar *_params, const uni
 	}];
 }
 
-void scoreflexSubmitTurn(const unichar *_challengeInstanceId, int64_t _score, const unichar *_params, const unichar *_handler)
+void scoreflexSubmitTurn(const unichar *_challengeId, int64_t _score, const unichar *_params, const unichar *_handler)
 {
 	id params = kvccWithScore(_params, _score);
-	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
+	NSString *challengeId = fromUnichar(_challengeId);
 	NSString *handler = stringOrNil(_handler);
-	[Scoreflex submitTurn:challengeInstanceId params:params
+	[Scoreflex submitTurn:challengeId params:params
 		handler:^(SXResponse *response , NSError *error) {
 			if(handler != nil)
 			{
@@ -390,7 +419,7 @@ void scoreflexSubmitTurn(const unichar *_challengeInstanceId, int64_t _score, co
 				{
 					message = [NSString stringWithFormat:@"%@:failure: %@", handler, [error localizedDescription]];
 				}
-				UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
+				UnitySendMessage([[ScoreflexBridgeState instance].unityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
 			}
 			NSLog(@"SubmitTurn Returned");
 		}
@@ -415,7 +444,7 @@ void scoreflexSubmitScore(const unichar *_leaderboardId, int64_t _score, const u
 				{
 					message = [NSString stringWithFormat:@"%@:failure: %@", handler, [error localizedDescription]];
 				}
-				UnitySendMessage([scoreflexUnityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
+				UnitySendMessage([[ScoreflexBridgeState instance].unityObjectName UTF8String], "HandleSubmit", [message UTF8String]);
 			}
 			NSLog(@"SubmitScore Returned");
 		}
@@ -427,12 +456,12 @@ void scoreflexSubmitScoreAndShowRanksPanel(const unichar *_leaderboardId, int64_
 	SXGravity gravity = isOnTop ? SXGravityTop : SXGravityBottom;
 	id params = kvccWithScore(_params, _score);
 	NSString *leaderboardId = fromUnichar(_leaderboardId);
-	scoreflexRankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:gravity];
+	[ScoreflexBridgeState instance].rankPanelView = [Scoreflex submitScoreAndShowRanksPanel:leaderboardId params:params gravity:gravity];
 }
 
-void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeInstanceId, int64_t _score, const unichar *_params)
+void scoreflexSubmitTurnAndShowChallengeDetail(const unichar *_challengeId, int64_t _score, const unichar *_params)
 {
 	id params = kvccWithScore(_params, _score);
-	NSString *challengeInstanceId = fromUnichar(_challengeInstanceId);
-	[Scoreflex submitTurnAndShowChallengeDetail:challengeInstanceId params:params];
+	NSString *challengeId = fromUnichar(_challengeId);
+	[Scoreflex submitTurnAndShowChallengeDetail:challengeId params:params];
 }
