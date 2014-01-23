@@ -70,7 +70,7 @@ public class Scoreflex : MonoBehaviour
 	{
 		if(PlaySoloHandlers == null)
 		{
-			Debug.LogError("Scoreflex: Instructed to play solo, but no handlers configured! Please assign to Scoreflex.Instance.ChallengeHandlers");
+			Debug.LogError("Scoreflex: Instructed to play solo, but no handlers configured! Please assign to Scoreflex.Instance.PlaySoloHandlers");
 		}
 		else
 		{
