@@ -38,6 +38,7 @@ public class Scoreflex : MonoBehaviour
 
 	private const string ErrorNotLive = "Scoreflex: Method called while not live.";
 
+
 	void Awake()
 	{
 		if(Instance == null)
@@ -63,9 +64,9 @@ public class Scoreflex : MonoBehaviour
 			GameObject.Destroy(gameObject);
 		}
 	}
-	
+
 	public System.Action<string> PlaySoloHandlers = null;
-	
+
 	void HandlePlaySolo(string figure)
 	{
 		if(PlaySoloHandlers == null)
@@ -151,7 +152,7 @@ public class Scoreflex : MonoBehaviour
 		string result = System.Text.Encoding.Unicode.GetString(buffer);
 		return result;
 	}
-	
+
 	public float GetPlayingTime()
 	{
 		if(!Live) {
@@ -161,14 +162,14 @@ public class Scoreflex : MonoBehaviour
 
 		return scoreflexGetPlayingTime();
 	}
-	
+
 	public void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowFullscreenView(resource, json);
@@ -180,7 +181,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return null;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		int handle = scoreflexShowPanelView(resource, json, (int) gravity);
@@ -216,7 +217,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowDeveloperProfile(developerId, json);
@@ -228,7 +229,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowGameDetails(gameId, json);
@@ -240,7 +241,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowGamePlayers(gameId, json);
@@ -252,7 +253,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowLeaderboard(leaderboardId, json);
@@ -264,7 +265,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowLeaderboardOverview(leaderboardId, json);
@@ -276,7 +277,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerChallenges(json);
@@ -288,7 +289,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerFriends(playerId, json);
@@ -300,7 +301,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerNewsFeed(json);
@@ -312,19 +313,19 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerProfile(playerId, json);
 	}
-	
+
 	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerProfileEdit(json);
@@ -336,19 +337,19 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerRating(json);
 	}
-	
+
 	public void ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
 		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowPlayerSettings(json);
@@ -360,7 +361,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowRanksPanel(leaderboardId, score, json, (int) gravity);
@@ -382,7 +383,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowSearch(json);
@@ -411,7 +412,7 @@ public class Scoreflex : MonoBehaviour
 	private static string CreateKeyForCallbackDictionary(System.Collections.IDictionary dictionary)
 	{
 		string key;
-		var random = new System.Random();	
+		var random = new System.Random();
 		do {
 			key = random.Next().ToString();
 		} while(dictionary.Contains(key));
@@ -441,12 +442,12 @@ public class Scoreflex : MonoBehaviour
 			if(callback != null) callback(false, new Dictionary<string,object>());
 			return;
 		}
-		
+
 		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(APICallbacks);
 		if(handlerKey != null) APICallbacks[handlerKey] = callback;
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
-		
+
 		scoreflexPut(resource, json, handlerKey);
 	}
 
@@ -457,12 +458,12 @@ public class Scoreflex : MonoBehaviour
 			if(callback != null) callback(false, new Dictionary<string,object>());
 			return;
 		}
-		
+
 		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(APICallbacks);
 		if(handlerKey != null) APICallbacks[handlerKey] = callback;
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
-		
+
 		scoreflexPostEventually(resource, json, handlerKey);
 	}
 
@@ -473,12 +474,12 @@ public class Scoreflex : MonoBehaviour
 			if(callback != null) callback(false, new Dictionary<string,object>());
 			return;
 		}
-		
+
 		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(APICallbacks);
 		if(handlerKey != null) APICallbacks[handlerKey] = callback;
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
-		
+
 		scoreflexDelete(resource, json, handlerKey);
 	}
 
@@ -505,10 +506,10 @@ public class Scoreflex : MonoBehaviour
 			if(callback != null) callback(false);
 			return;
 		}
-		
+
 		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(SubmitCallbacks);
 		if(handlerKey != null) SubmitCallbacks[handlerKey] = callback;
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexSubmitScore(leaderboardId, score, json, handlerKey);
@@ -520,7 +521,7 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score, json, (int) gravity);
@@ -532,17 +533,17 @@ public class Scoreflex : MonoBehaviour
 			Debug.Log(ErrorNotLive);
 			return;
 		}
-		
+
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexSubmitTurnAndShowChallengeDetail(challengeLeaderboardId, score, json);
 	}
-	
+
 	#region Imports
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexGet(string resource, string json = null, string handler = null);
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexPut(string resource, string json = null, string handler = null);
 
@@ -557,10 +558,10 @@ public class Scoreflex : MonoBehaviour
 
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexShowFullscreenView(string resource, string json = null);
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern int scoreflexShowPanelView(string resource, string json = null, int isOnTop = 1);
-	
+
 	[DllImport ("__Internal")]
 	private static extern void scoreflexHidePanelView(int handle);
 
@@ -575,7 +576,7 @@ public class Scoreflex : MonoBehaviour
 
 	[DllImport ("__Internal")]
 	private static extern void scoreflexListenForChallengesAndPlaySolo();
-	
+
 	[DllImport ("__Internal")]
 	private static extern float scoreflexGetPlayingTime();
 
@@ -626,19 +627,19 @@ public class Scoreflex : MonoBehaviour
 
 	[DllImport ("__Internal")]
 	private static extern void scoreflexHideRanksPanel();
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexShowSearch(string json = null);
-	
+
 	[DllImport ("__Internal")]
 	private static extern void scoreflexStartPlayingSession();
-	
+
 	[DllImport ("__Internal")]
 	private static extern void scoreflexStopPlayingSession();
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexSubmitTurn(string challengeId, long score, string json = null, string handler = null);
-	
+
 	[DllImport ("__Internal", CharSet = CharSet.Unicode)]
 	private static extern void scoreflexSubmitScore(string leaderboardId, long score, string json = null, string handler = null);
 
