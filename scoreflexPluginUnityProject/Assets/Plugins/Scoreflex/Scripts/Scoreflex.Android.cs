@@ -22,8 +22,6 @@ public partial class Scoreflex
 				scoreflex = new AndroidJavaClass("com.scoreflex.Scoreflex");
 				scoreflex.CallStatic("initialize", unityActivity, ClientId, ClientSecret, Sandbox);
 
-				scoreflex.CallStatic("showPlayerProfile", unityActivity, null, null);
-
 				//scoreflexListenForChallengesAndPlaySolo();
 				//scoreflexSetUnityObjectName(gameObject.name);
 				//scoreflexSetClientId(ClientId, ClientSecret, Sandbox);
@@ -130,8 +128,7 @@ public partial class Scoreflex
 	
 	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		Debug.Log(ErrorNotLive);
-		return;
+		AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPlayerProfile", unityActivity, null, null);
 	}
 	
 	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
