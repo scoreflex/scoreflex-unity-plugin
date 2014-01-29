@@ -125,10 +125,24 @@ public partial class Scoreflex
 		Debug.Log(ErrorNotLive);
 		return;
 	}
+
 	
 	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPlayerProfile", unityActivity, null, null);
+		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+			/*AndroidJavaObject scoreflexActivity = new AndroidJavaObject("com.scoreflex.ScoreflexActivity");
+
+			//AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
+			//int FLAG_ACTIVITY_NEW_TASK = intentClass.Get<int>("FLAG_ACTIVITY_NEW_TASK");
+			int FLAG_ACTIVITY_NEW_TASK = 268435456;
+
+			AndroidJavaObject blankIntent = new AndroidJavaObject("android.content.Intent");
+			blankIntent.Call<AndroidJavaObject>("addFlags", FLAG_ACTIVITY_NEW_TASK);
+			
+			scoreflexActivity.Call("startActivity", blankIntent);*/
+
+			AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPlayerProfile", unityActivity, null, null);
+		}));
 	}
 	
 	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
