@@ -130,6 +130,13 @@ public partial class Scoreflex
 	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
 		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+
+			AndroidJavaClass scoreflexActivityClass = new AndroidJavaClass("com.scoreflex.ScoreflexActivity");
+			
+			AndroidJavaObject intent = new AndroidJavaObject("android.content.Intent", unityActivity, scoreflexActivityClass);
+
+			unityActivity.Call("startActivity", intent);
+
 			/*AndroidJavaObject scoreflexActivity = new AndroidJavaObject("com.scoreflex.ScoreflexActivity");
 
 			//AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
@@ -141,7 +148,7 @@ public partial class Scoreflex
 			
 			scoreflexActivity.Call("startActivity", blankIntent);*/
 
-			AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPlayerProfile", unityActivity, null, null);
+			//AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPlayerProfile", unityActivity, null, null);
 		}));
 	}
 	
