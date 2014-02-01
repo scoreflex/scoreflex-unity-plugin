@@ -18,8 +18,11 @@ public partial class Scoreflex : MonoBehaviour
 
 		public void Close()
 		{
-#warning FIXME
-			//Scoreflex.scoreflexHidePanelView(handle);
+			#if UNITY_IPHONE
+			Scoreflex.scoreflexHidePanelView(handle);
+			#elif UNITY_ANDROID
+			if(Scoreflex.Instance != null) Scoreflex.Instance.HidePanelView(handle);
+			#endif
 		}
 	}
 

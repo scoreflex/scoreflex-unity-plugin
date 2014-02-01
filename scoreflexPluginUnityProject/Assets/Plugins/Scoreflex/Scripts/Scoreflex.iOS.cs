@@ -32,8 +32,6 @@ public partial class Scoreflex
 		}
 	}
 
-	public System.Action<string> PlaySoloHandlers = null;
-
 	void HandlePlaySolo(string figure)
 	{
 		if(PlaySoloHandlers == null)
@@ -45,8 +43,6 @@ public partial class Scoreflex
 			PlaySoloHandlers(figure);
 		}
 	}
-
-	public System.Action<Dictionary<string,object>> ChallengeHandlers = null;
 
 	void HandleChallenge(string figure)
 	{
@@ -416,6 +412,22 @@ public partial class Scoreflex
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexPut(resource, json, handlerKey);
+	}
+	
+	public void Post(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			if(callback != null) callback(false, new Dictionary<string,object>());
+			return;
+		}
+		
+		string handlerKey = callback == null ? null : CreateKeyForCallbackDictionary(APICallbacks);
+		if(handlerKey != null) APICallbacks[handlerKey] = callback;
+		
+		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
+		
+		scoreflexPost(resource, json, handlerKey);
 	}
 
 	public void PostEventually(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)

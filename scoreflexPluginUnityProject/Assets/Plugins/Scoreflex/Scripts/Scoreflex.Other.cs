@@ -5,7 +5,7 @@ using System.Text;
 
 public partial class Scoreflex
 {
-#if !UNITY_IPHONE && !UNITY_ANDROID
+	#if !UNITY_IPHONE && !UNITY_ANDROID
 	void Awake()
 	{
 		if(Instance == null)
@@ -166,6 +166,13 @@ public partial class Scoreflex
 	}
 
 	public void Put(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	{
+		Debug.Log(ErrorNotLive);
+		if(callback != null) callback(false, new Dictionary<string,object>());
+		return;
+	}
+	
+	public void Post(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
