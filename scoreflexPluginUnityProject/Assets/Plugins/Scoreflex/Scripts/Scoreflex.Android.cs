@@ -152,6 +152,16 @@ public partial class Scoreflex
 		return intent;
 	}
 
+	private void AddParametersToIntentIfNotNull(AndroidJavaObject intent, Dictionary<string,object> _parameters)
+	{
+		if(_parameters != null)
+		{
+			AndroidJavaObject parameters = CreateRequestParamsFromDictionary(_parameters);
+			string key = GetScoreflexActivityConstant("INTENT_EXTRA_REQUEST_PARAMS_KEY");
+			intent.Call<AndroidJavaObject>("putExtra", key, parameters);
+		}
+	}
+
 	private void AddFigureToIntentIfNotNull(AndroidJavaObject intent, string figure, string constantName)
 	{
 		if(figure != null)
@@ -197,9 +207,10 @@ public partial class Scoreflex
 	
 	public void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
-		#warning UNIMPLEMENTED
-		Debug.Log(ErrorNotLive);
-		return;
+		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_FULLSCREEN_VIEW");
+		AddFigureToIntentIfNotNull(intent, resource, "INTENT_EXTRA_FULLSCREEN_RESOURCE");
+		AddParametersToIntentIfNotNull(intent, parameters);
+		StartActivityWithIntent(intent);
 	}
 
 	private readonly Dictionary<int,AndroidJavaObject> scoreflexViewByHandle = new Dictionary<int,AndroidJavaObject>();
@@ -233,6 +244,7 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_GAMES");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -240,6 +252,7 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -247,6 +260,7 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_DETAIL");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -254,6 +268,7 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_PLAYERS");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -261,6 +276,7 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD");
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -268,12 +284,14 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD_OVERVIEW");
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGES");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
@@ -281,12 +299,14 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_FRIENDS");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_NEWS_FEED");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 
@@ -295,30 +315,35 @@ public partial class Scoreflex
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE_EDIT");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_RATING");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_SETTINGS");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
 	public void ShowSearch(Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_SEARCH");
+		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 
@@ -405,8 +430,11 @@ public partial class Scoreflex
 	
 	public void SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
 	{
-		#warning This needs to show the challenge detail.
-		SubmitTurn(challengeInstanceId, score, parameters, (success) => { /* Show challenge detail */ } );
+		SubmitTurn(challengeInstanceId, score, parameters, (success) => {
+			AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGE_DETAIL");
+			AddFigureToIntentIfNotNull(intent, challengeInstanceId, "INTENT_EXTRA_CHALLENGE_INSTANCE_ID");
+			StartActivityWithIntent(intent);
+		} );
 	}
 
 #endif
