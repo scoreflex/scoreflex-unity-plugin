@@ -7,31 +7,19 @@ public partial class Scoreflex
 {
 	#if UNITY_ANDROID
 	class ResponseHandler: AndroidJavaProxy {
-		private System.Action<bool,Dictionary<string,object>> realHandler;
-		private System.Action<bool> simpleHandler;
+		private Callback callback;
 
-		public ResponseHandler(System.Action<bool,Dictionary<string,object>> realHandler)
+		public ResponseHandler(Callback realHandler)
 			: base("com.scoreflex.unity3d.IResponseHandler") {
-			this.realHandler = realHandler;
-			this.simpleHandler = null;
-		}
-		
-		public ResponseHandler(System.Action<bool> simpleHandler)
-		: base("com.scoreflex.unity3d.IResponseHandler") {
-			this.realHandler = null;
-			this.simpleHandler = simpleHandler;
+			this.callback = realHandler;
 		}
 
 		private void handle(bool success, AndroidJavaObject response)
 		{
-			if(realHandler != null)
+			if(callback != null)
 			{
 				var figures = Scoreflex.PullFiguresFromResponse(response);
-				realHandler(success, figures);
-			}
-			if(simpleHandler != null)
-			{
-				simpleHandler(success);
+				Scoreflex.Instance.EnqueueCallback(callback, success, figures);
 			}
 		}
 
@@ -44,11 +32,17 @@ public partial class Scoreflex
 		{
 			handle(true, response);
 		}
+
+		public AndroidJavaObject ToBridge()
+		{
+			var bridge = new AndroidJavaObject("com.scoreflex.unity3d.ResponseHandler", this);
+			return bridge;
+		}
 	}
 
 	class ChallengeBroadcastReceiver: AndroidJavaProxy {
 
-		public ChallengeBroadcastReceiver(): base("com.scoreflex.unity3d.BroadcastReceiver")
+		public ChallengeBroadcastReceiver(): base("com.scoreflex.unity3d.IBroadcastReceiver")
 		{
 		}
 
@@ -61,7 +55,7 @@ public partial class Scoreflex
 				string constantValue = AndroidJNI.GetStaticStringField(scoreflexClass.GetRawClass(), constantID);
 				string jsonString = intent.Call<string>("getStringExtra", constantValue);
 				var result = MiniJSON.Json.Deserialize(jsonString) as Dictionary<string,object>;
-				Scoreflex.Instance.ChallengeHandlers(result);
+				Scoreflex.Instance.CallChallengeHandlers(result);
 			}
 			else
 			{
@@ -96,10 +90,11 @@ public partial class Scoreflex
 				AndroidJavaClass localBroadcastManagerClass = new AndroidJavaClass("android.support.v4.content.LocalBroadcastManager");
 				var localBroadcastManager = localBroadcastManagerClass.CallStatic<AndroidJavaObject>("getInstance", unityActivity);
 				challengeBroadcastReceiver = new ChallengeBroadcastReceiver();
+				var challengeBroadcastReceiverBridge = new AndroidJavaObject("com.scoreflex.unity3d.BroadcastReceiver", challengeBroadcastReceiver);
 				var INTENT_START_CHALLENGE_ID = AndroidJNI.GetStaticFieldID(scoreflex.GetRawClass(), "INTENT_START_CHALLENGE", "Ljava/lang/String;");
 				string INTENT_START_CHALLENGE = AndroidJNI.GetStaticStringField(scoreflex.GetRawClass(), INTENT_START_CHALLENGE_ID);
 				AndroidJavaObject intentFilter = new AndroidJavaObject("android.content.IntentFilter", INTENT_START_CHALLENGE);
-				localBroadcastManager.Call("registerReceiver", challengeBroadcastReceiver, intentFilter);
+				localBroadcastManager.Call("registerReceiver", challengeBroadcastReceiverBridge, intentFilter);
 
 				initialized = true;
 			}
@@ -173,15 +168,17 @@ public partial class Scoreflex
 
 	private AndroidJavaObject CreateRequestParamsFromDictionary(Dictionary<string,object> source, long? score = null)
 	{
-		AndroidJavaObject map = new AndroidJavaObject("java.util.Map");
+		AndroidJavaClass mapAssist = new AndroidJavaClass("com.scoreflex.unity3d.MapAssist");
+
+		AndroidJavaObject map = new AndroidJavaObject("java.util.HashMap");
 		if(source != null)
 			foreach(KeyValuePair<string,object> kvp in source)
 			{
-				map.Call("put", kvp.Key, kvp.Value.ToString());
+				mapAssist.CallStatic("put", map, kvp.Key, kvp.Value.ToString());
 			}
 		if(score.HasValue)
 		{
-			map.Call("put", "score", score.Value.ToString());
+			mapAssist.CallStatic("put", map, "score", score.Value.ToString());
 		}
 		AndroidJavaObject requestParams = new AndroidJavaObject("com.scoreflex.Scoreflex$RequestParams", map);
 		return requestParams;
@@ -218,11 +215,34 @@ public partial class Scoreflex
 	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		AndroidJavaObject view = scoreflex.CallStatic<AndroidJavaObject>("showPanelView", unityActivity, resource, droidParams, androidGravity[gravity]);
-		int newHandle;
-		do newHandle = Random.Range(1, int.MaxValue); while(scoreflexViewByHandle.ContainsKey(newHandle) == false);
-		scoreflexViewByHandle[newHandle] = view;
-		return new View(newHandle);
+		AndroidJavaObject view = null;
+
+		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+			view = scoreflex.CallStatic<AndroidJavaObject>("showPanelView", unityActivity, resource, droidParams, androidGravity[gravity]);
+		}));
+
+		const int timeout = 5000;
+		int countdown = timeout;
+
+		while(view == null && countdown > 0)
+		{
+			const int rest = 5;
+			System.Threading.Thread.Sleep(rest);
+			countdown -= rest;
+		}
+
+		if(view == null)
+		{
+			Debug.LogError("Scoreflex.ShowPanelView attempted to call up a panel view but request timed out.");
+			return null;
+		}
+		else
+		{
+			int newHandle;
+			do newHandle = Random.Range(1, int.MaxValue); while(scoreflexViewByHandle.ContainsKey(newHandle) == false);
+			scoreflexViewByHandle[newHandle] = view;
+			return new View(newHandle);
+		}
 	}
 
 	private void HidePanelView(int handle)
@@ -351,16 +371,20 @@ public partial class Scoreflex
 
 	public void ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		var requestParams = CreateRequestParamsFromDictionary(parameters, score);
-		ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams);
+		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+			var requestParams = CreateRequestParamsFromDictionary(parameters, score);
+			ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams);
+		}));
 	}
 	
 	public void HideRanksPanel()
 	{
 		if(ranksPanelView != null)
 		{
-			ranksPanelView.Call("close");
-			ranksPanelView = null;
+			unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+				ranksPanelView.Call("close");
+				ranksPanelView = null;
+			}));
 		}
 	}
 	
@@ -374,63 +398,63 @@ public partial class Scoreflex
 		scoreflex.CallStatic("stopPlayingSession");
 	}
 	
-	public void Get(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	public void Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("get", resource, droidParams, droidHandler);
 	}
 	
-	public void Put(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	public void Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("put", resource, droidParams, droidHandler);
 	}
 	
-	public void Post(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	public void Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("post", resource, droidParams, droidHandler);
 	}
 	
-	public void PostEventually(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	public void PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("postEventually", resource, droidParams, droidHandler);
 	}
 	
-	public void Delete(string resource, Dictionary<string,object> parameters, System.Action<bool,Dictionary<string,object>> callback)
+	public void Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("delete", resource, droidHandler);
 	}
 	
-	public void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, System.Action<bool> callback = null)
+	public void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters, score);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("submitTurn", challengeInstanceId, droidParams, droidHandler);
 	}
 	
-	public void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, System.Action<bool> callback = null)
+	public void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback);
+		var droidHandler = new ResponseHandler(callback).ToBridge();
 		scoreflex.CallStatic("submitScore", leaderboardId, score, droidParams, droidHandler);
 	}
 	
 	public void SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		ShowRanksPanel(leaderboardId, score, gravity:gravity);
-		SubmitScore(leaderboardId, score, parameters, (success) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
+		SubmitScore(leaderboardId, score, parameters, (success, dict) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
 	}
 	
 	public void SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
 	{
-		SubmitTurn(challengeInstanceId, score, parameters, (success) => {
+		SubmitTurn(challengeInstanceId, score, parameters, (success, dict) => {
 			AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGE_DETAIL");
 			AddFigureToIntentIfNotNull(intent, challengeInstanceId, "INTENT_EXTRA_CHALLENGE_INSTANCE_ID");
 			StartActivityWithIntent(intent);

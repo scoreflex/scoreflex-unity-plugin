@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 using System.Runtime.InteropServices;
 
@@ -20,8 +20,12 @@ public class StubGUI : MonoBehaviour
 
 		if(GUI.Button(new Rect(10, 68, 96, 48), "Trip Test"))
 		{
-			Debug.Log("Player ID: " + Scoreflex.Instance.GetPlayerId());
+			var id = Scoreflex.Instance.GetPlayerId();
+			Debug.Log("Player ID: " + id);
 			Debug.Log("Playing Time: " + Scoreflex.Instance.GetPlayingTime());
+			Scoreflex.Instance.Get("/players/"+id, null, (bool success, Dictionary<string,object> result) => {
+				Debug.Log("REQUEST EXECUTED");
+			});
 		}
 	}
 
