@@ -6,21 +6,30 @@ using System.Text;
 public partial class Scoreflex
 {
 	#if UNITY_ANDROID
-	class ResponseHandler: AndroidJavaProxy {
-		private Callback callback;
 
-		public ResponseHandler(Callback realHandler)
+	private const string OPERATION_KEY_RESPONSE = "response";
+	private const string OPERATION_KEY_SUCCESS = "success";
+	private const string OPERATION_KEY_CALLBACK = "callback";
+	private const string OPERATION_KEY_INTENT = "intent";
+
+	class ResponseHandler: AndroidJavaProxy {
+		private Scoreflex Instance;
+		private Callback Callback;
+
+		public ResponseHandler(Scoreflex instance, Callback callback)
 			: base("com.scoreflex.unity3d.IResponseHandler") {
-			this.callback = realHandler;
+			Callback = callback;
+			Instance = instance;
 		}
 
 		private void handle(bool success, AndroidJavaObject response)
 		{
-			if(callback != null)
-			{
-				var figures = Scoreflex.PullFiguresFromResponse(response);
-				Scoreflex.Instance.EnqueueCallback(callback, success, figures);
-			}
+			var figures = new Dictionary<string,object> {
+				{ OPERATION_KEY_RESPONSE, response },
+				{ OPERATION_KEY_SUCCESS, success },
+				{ OPERATION_KEY_CALLBACK, Callback }
+			};
+			Instance.EnqueuePendingOperation(Instance.ProcessResponse, figures);
 		}
 
 		public void onFailure(AndroidJavaObject response)
@@ -41,44 +50,49 @@ public partial class Scoreflex
 	}
 
 	class ChallengeBroadcastReceiver: AndroidJavaProxy {
-
 		Scoreflex Instance;
-
 		public ChallengeBroadcastReceiver(Scoreflex instance): base("com.scoreflex.unity3d.IBroadcastReceiver")
 		{
 			Instance = instance;
 		}
-
 		void onReceive(AndroidJavaObject context, AndroidJavaObject intent)
 		{
-			var packedIntent = new Dictionary<string,object> {
-				{ "intent", intent }
+			var figures = new Dictionary<string,object> {
+				{ Scoreflex.OPERATION_KEY_INTENT, intent }
 			};
-			Instance.EnqueueCallback(Instance.ProcessChallengeBroadcast, true, packedIntent);
+			Instance.EnqueuePendingOperation(Instance.ProcessChallengeBroadcast, figures);
 		}
 	}
 
 	class PlaySoloBroadcastReceiver: AndroidJavaProxy {
-
 		Scoreflex Instance;
-
 		public PlaySoloBroadcastReceiver(Scoreflex instance): base("com.scoreflex.unity3d.IBroadcastReceiver")
 		{
 			Instance = instance;
 		}
-
 		void onReceive(AndroidJavaObject context, AndroidJavaObject intent)
 		{
-			var packedIntent = new Dictionary<string,object> {
-				{ "intent", intent }
+			var figures = new Dictionary<string,object> {
+				{ Scoreflex.OPERATION_KEY_INTENT, intent }
 			};
-			Instance.EnqueueCallback(Instance.ProcessPlaySoloBroadcast, true, packedIntent);
+			Instance.EnqueuePendingOperation(Instance.ProcessPlaySoloBroadcast, figures);
 		}
 	}
 
-	void ProcessChallengeBroadcast(bool junk, Dictionary<string,object> dict)
+	void ProcessResponse(Dictionary<string,object> figures)
 	{
-		AndroidJavaObject intent = dict["intent"] as AndroidJavaObject;
+		var response = (AndroidJavaObject) figures[Scoreflex.OPERATION_KEY_RESPONSE];
+		var boolean = (bool) figures[Scoreflex.OPERATION_KEY_SUCCESS];
+		var callback = (Callback) figures[Scoreflex.OPERATION_KEY_CALLBACK];
+
+		var parsedResponse = PullFiguresFromResponse(response);
+
+		callback(boolean, parsedResponse);
+	}
+
+	void ProcessChallengeBroadcast(Dictionary<string,object> figures)
+	{
+		var intent = (AndroidJavaObject) figures[Scoreflex.OPERATION_KEY_INTENT];
 		var scoreflexClass = new AndroidJavaClass("com.scoreflex.Scoreflex");
 		var constantID = AndroidJNI.GetStaticFieldID(scoreflexClass.GetRawClass(), "INTENT_START_CHALLENGE_EXTRA_INSTANCE", "Ljava/lang/String;");
 		Debug.Log("Kappakappa: Attempt to pull key '" + constantID + "' from provided Intent.");
@@ -87,18 +101,18 @@ public partial class Scoreflex
 		var jsonObject = jsonParcelable.Call<AndroidJavaObject>("getJSONObject");
 		var jsonString = jsonObject.Call<string>("toString");
 		var result = MiniJSON.Json.Deserialize(jsonString) as Dictionary<string,object>;
-		CallChallengeHandlers(result);
+		ChallengeHandlers(result);
 	}
 
-	void ProcessPlaySoloBroadcast(bool junk, Dictionary<string,object> dict)
+	void ProcessPlaySoloBroadcast(Dictionary<string,object> figures)
 	{
-		AndroidJavaObject intent = dict["intent"] as AndroidJavaObject;
+		var intent = (AndroidJavaObject) figures[Scoreflex.OPERATION_KEY_INTENT];
 		var scoreflexClass = new AndroidJavaClass("com.scoreflex.Scoreflex");
 		var constantID = AndroidJNI.GetStaticFieldID(scoreflexClass.GetRawClass(), "INTENT_PLAY_LEVEL_EXTRA_LEADERBOARD_ID", "Ljava/lang/String;");
 		Debug.Log("Bungabunga: Attempt to pull key '" + constantID + "' from provided Intent.");
 		string constantValue = AndroidJNI.GetStaticStringField(scoreflexClass.GetRawClass(), constantID);
 		string leaderboardId = intent.Call<string>("getStringExtra", constantValue);
-		CallPlaySoloHandlers(leaderboardId);
+		PlaySoloHandlers(leaderboardId);
 	}
 
 	//These figures are derived from the Android SDK manual for android.view.Gravity.
@@ -155,6 +169,35 @@ public partial class Scoreflex
 			GameObject.Destroy(gameObject);
 		}
 	}
+
+	#region Internal queue to handler callbacks from Java runtime on the Unity main thread.
+	private class PendingOperation {
+		public System.Action<Dictionary<string,object>> method;
+		public Dictionary<string,object> figures;
+	};
+	private readonly List<PendingOperation> PendingOperations = new List<PendingOperation>();
+	private void EnqueuePendingOperation(System.Action<Dictionary<string,object>> method, Dictionary<string,object> figures)
+	{
+		var pendingOperation = new PendingOperation {
+			method = method,
+			figures = figures
+		};
+		lock(PendingOperations) {
+			PendingOperations.Add(pendingOperation);
+		}
+	}
+	void Update()
+	{
+		lock(PendingOperations)
+		{
+			foreach(var pendingOperation in PendingOperations)
+			{
+				pendingOperation.method(pendingOperation.figures);
+			}
+			PendingOperations.Clear();
+		}
+	}
+	#endregion
 
 	private static Dictionary<string,object> PullFiguresFromResponse(AndroidJavaObject response)
 	{
@@ -445,48 +488,48 @@ public partial class Scoreflex
 	public void Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("get", resource, droidParams, droidHandler);
 	}
 	
 	public void Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("put", resource, droidParams, droidHandler);
 	}
 	
 	public void Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("post", resource, droidParams, droidHandler);
 	}
 	
 	public void PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("postEventually", resource, droidParams, droidHandler);
 	}
 	
 	public void Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("delete", resource, droidHandler);
 	}
 	
 	public void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters, score);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitTurn", challengeInstanceId, droidParams, droidHandler);
 	}
 	
 	public void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-		var droidHandler = new ResponseHandler(callback).ToBridge();
+		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitScore", leaderboardId, score, droidParams, droidHandler);
 	}
 	
