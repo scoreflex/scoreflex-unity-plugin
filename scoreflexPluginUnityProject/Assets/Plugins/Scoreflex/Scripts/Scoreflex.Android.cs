@@ -51,6 +51,7 @@ public partial class Scoreflex
 
 	class ChallengeBroadcastReceiver: AndroidJavaProxy {
 		Scoreflex Instance;
+
 		public ChallengeBroadcastReceiver(Scoreflex instance): base("com.scoreflex.unity3d.IBroadcastReceiver")
 		{
 			Instance = instance;
@@ -212,7 +213,7 @@ public partial class Scoreflex
 	private string GetScoreflexActivityConstant(string constantName)
 	{
 		AndroidJavaClass scoreflexActivityClass = new AndroidJavaClass("com.scoreflex.ScoreflexActivity");
-		var constantID = AndroidJNI.GetStaticFieldID(scoreflexActivityClass.GetRawClass(), "INTENT_SHOW_EXTRA_KEY", "Ljava/lang/String;");
+		var constantID = AndroidJNI.GetStaticFieldID(scoreflexActivityClass.GetRawClass(), constantName, "Ljava/lang/String;");
 		string constantValue = AndroidJNI.GetStaticStringField(scoreflexActivityClass.GetRawClass(), constantID);
 		return constantValue;
 	}
@@ -226,7 +227,6 @@ public partial class Scoreflex
 
 		var showWhatID = AndroidJNI.GetStaticFieldID(scoreflexActivityClass.GetRawClass(), showWhat, "Ljava/lang/String;");
 		string showWhatValue = AndroidJNI.GetStaticStringField(scoreflexActivityClass.GetRawClass(), showWhatID);
-
 		AndroidJavaObject intent = new AndroidJavaObject("android.content.Intent", unityActivity, scoreflexActivityClass);
 		
 		intent.Call<AndroidJavaObject>("putExtra", showWhatKey, showWhatValue);
@@ -382,6 +382,7 @@ public partial class Scoreflex
 	public void ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD");
+		Debug.Log("LeaderboardID: " + leaderboardId);
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -460,7 +461,7 @@ public partial class Scoreflex
 	{
 		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
 			var requestParams = CreateRequestParamsFromDictionary(parameters, score);
-			ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams);
+			ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams, true);
 		}));
 	}
 	
