@@ -51,10 +51,28 @@ public partial class Scoreflex
 
 		void onReceive(AndroidJavaObject context, AndroidJavaObject intent)
 		{
-			Dictionary<string,object> packedIntent = new Dictionary<string,object> {
+			var packedIntent = new Dictionary<string,object> {
 				{ "intent", intent }
 			};
 			Instance.EnqueueCallback(Instance.ProcessChallengeBroadcast, true, packedIntent);
+		}
+	}
+
+	class PlaySoloBroadcastReceiver: AndroidJavaProxy {
+
+		Scoreflex Instance;
+
+		public PlaySoloBroadcastReceiver(Scoreflex instance): base("com.scoreflex.unity3d.IBroadcastReceiver")
+		{
+			Instance = instance;
+		}
+
+		void onReceive(AndroidJavaObject context, AndroidJavaObject intent)
+		{
+			var packedIntent = new Dictionary<string,object> {
+				{ "intent", intent }
+			};
+			Instance.EnqueueCallback(Instance.ProcessPlaySoloBroadcast, true, packedIntent);
 		}
 	}
 
@@ -65,9 +83,22 @@ public partial class Scoreflex
 		var constantID = AndroidJNI.GetStaticFieldID(scoreflexClass.GetRawClass(), "INTENT_START_CHALLENGE_EXTRA_INSTANCE", "Ljava/lang/String;");
 		Debug.Log("Kappakappa: Attempt to pull key '" + constantID + "' from provided Intent.");
 		string constantValue = AndroidJNI.GetStaticStringField(scoreflexClass.GetRawClass(), constantID);
-		string jsonString = intent.Call<string>("getStringExtra", constantValue);
+		var jsonParcelable = intent.Call<AndroidJavaObject>("getParcelableExtra", constantValue);
+		var jsonObject = jsonParcelable.Call<AndroidJavaObject>("getJSONObject");
+		var jsonString = jsonObject.Call<string>("toString");
 		var result = MiniJSON.Json.Deserialize(jsonString) as Dictionary<string,object>;
 		CallChallengeHandlers(result);
+	}
+
+	void ProcessPlaySoloBroadcast(bool junk, Dictionary<string,object> dict)
+	{
+		AndroidJavaObject intent = dict["intent"] as AndroidJavaObject;
+		var scoreflexClass = new AndroidJavaClass("com.scoreflex.Scoreflex");
+		var constantID = AndroidJNI.GetStaticFieldID(scoreflexClass.GetRawClass(), "INTENT_PLAY_LEVEL_EXTRA_LEADERBOARD_ID", "Ljava/lang/String;");
+		Debug.Log("Bungabunga: Attempt to pull key '" + constantID + "' from provided Intent.");
+		string constantValue = AndroidJNI.GetStaticStringField(scoreflexClass.GetRawClass(), constantID);
+		string leaderboardId = intent.Call<string>("getStringExtra", constantValue);
+		CallPlaySoloHandlers(leaderboardId);
 	}
 
 	//These figures are derived from the Android SDK manual for android.view.Gravity.
@@ -79,7 +110,6 @@ public partial class Scoreflex
 
 	AndroidJavaObject unityActivity;
 	AndroidJavaClass scoreflex;
-	ChallengeBroadcastReceiver challengeBroadcastReceiver;
 
 	void Awake()
 	{
@@ -95,12 +125,20 @@ public partial class Scoreflex
 
 				AndroidJavaClass localBroadcastManagerClass = new AndroidJavaClass("android.support.v4.content.LocalBroadcastManager");
 				var localBroadcastManager = localBroadcastManagerClass.CallStatic<AndroidJavaObject>("getInstance", unityActivity);
-				challengeBroadcastReceiver = new ChallengeBroadcastReceiver(this);
+
+				var challengeBroadcastReceiver = new ChallengeBroadcastReceiver(this);
 				var challengeBroadcastReceiverBridge = new AndroidJavaObject("com.scoreflex.unity3d.BroadcastReceiver", challengeBroadcastReceiver);
 				var INTENT_START_CHALLENGE_ID = AndroidJNI.GetStaticFieldID(scoreflex.GetRawClass(), "INTENT_START_CHALLENGE", "Ljava/lang/String;");
 				string INTENT_START_CHALLENGE = AndroidJNI.GetStaticStringField(scoreflex.GetRawClass(), INTENT_START_CHALLENGE_ID);
-				AndroidJavaObject intentFilter = new AndroidJavaObject("android.content.IntentFilter", INTENT_START_CHALLENGE);
-				localBroadcastManager.Call("registerReceiver", challengeBroadcastReceiverBridge, intentFilter);
+				AndroidJavaObject challengeIntentFilter = new AndroidJavaObject("android.content.IntentFilter", INTENT_START_CHALLENGE);
+				localBroadcastManager.Call("registerReceiver", challengeBroadcastReceiverBridge, challengeIntentFilter);
+
+				var playSoloBroadcastReceiver = new PlaySoloBroadcastReceiver(this);
+				var playSoloBroadcastReceiverBridge = new AndroidJavaObject("com.scoreflex.unity3d.BroadcastReceiver", playSoloBroadcastReceiver);
+				var INTENT_PLAY_LEVEL_ID = AndroidJNI.GetStaticFieldID(scoreflex.GetRawClass(), "INTENT_PLAY_LEVEL", "Ljava/lang/String;");
+				string INTENT_PLAY_LEVEL = AndroidJNI.GetStaticStringField(scoreflex.GetRawClass(), INTENT_PLAY_LEVEL_ID);
+				AndroidJavaObject playSoloIntentFilter = new AndroidJavaObject("android.content.IntentFilter", INTENT_PLAY_LEVEL);
+				localBroadcastManager.Call("registerReceiver", playSoloBroadcastReceiverBridge, playSoloIntentFilter);
 
 				initialized = true;
 			}
