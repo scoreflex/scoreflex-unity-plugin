@@ -13,12 +13,12 @@ public class StubGUI : MonoBehaviour
 
 	void OnGUI()
 	{
-		if(GUI.Button(new Rect(10, 10, 96, 48), "Show"))
+		if(GUI.Button(new Rect(10, 10, 96, 64), "Show"))
 		{
 			Scoreflex.Instance.ShowPlayerProfile();
 		}
 
-		if(GUI.Button(new Rect(10, 68, 96, 48), "Trip Test"))
+		if(GUI.Button(new Rect(10, 84, 96, 64), "Trip Test"))
 		{
 			var id = Scoreflex.Instance.GetPlayerId();
 			Debug.Log("Player ID: " + id);
