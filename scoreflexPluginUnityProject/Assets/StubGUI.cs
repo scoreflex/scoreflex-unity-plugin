@@ -10,6 +10,15 @@ public class StubGUI : MonoBehaviour
 		Debug.Log("Message from C function: " + s);
 	}
 
+	void Start()
+	{
+		Scoreflex.Instance.PlaySoloHandlers = PlaySoloHandler;
+	}
+
+	void PlaySoloHandler(string leaderboardId)
+	{
+		Debug.Log("Received order to play solo on: " + leaderboardId);
+	}
 
 	void OnGUI()
 	{

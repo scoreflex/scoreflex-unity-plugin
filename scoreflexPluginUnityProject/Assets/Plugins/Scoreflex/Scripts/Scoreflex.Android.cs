@@ -88,7 +88,7 @@ public partial class Scoreflex
 
 		var parsedResponse = PullFiguresFromResponse(response);
 
-		callback(boolean, parsedResponse);
+		if(callback != null) callback(boolean, parsedResponse);
 	}
 
 	void ProcessChallengeBroadcast(Dictionary<string,object> figures)
@@ -157,9 +157,10 @@ public partial class Scoreflex
 
 				initialized = true;
 			}
-			catch(System.EntryPointNotFoundException)
+			catch(System.Exception ex)
 			{
-				Debug.LogWarning("Failed to boot Scoreflex; not linked (EntryPointNotFoundException).");
+				Debug.LogWarning("Failed to boot Scoreflex.");
+				Debug.LogException(ex);
 				initialized = false;
 			}
 			GameObject.DontDestroyOnLoad(gameObject);
@@ -193,7 +194,13 @@ public partial class Scoreflex
 		{
 			foreach(var pendingOperation in PendingOperations)
 			{
-				pendingOperation.method(pendingOperation.figures);
+				try {
+					pendingOperation.method(pendingOperation.figures);
+				}
+				catch(System.Exception ex)
+				{
+					Debug.LogException(ex);
+				}
 			}
 			PendingOperations.Clear();
 		}
@@ -259,10 +266,13 @@ public partial class Scoreflex
 
 		AndroidJavaObject map = new AndroidJavaObject("java.util.HashMap");
 		if(source != null)
+		{
 			foreach(KeyValuePair<string,object> kvp in source)
 			{
-				mapAssist.CallStatic("put", map, kvp.Key, kvp.Value.ToString());
+				var value = kvp.Value == null ? null : kvp.Value.ToString();
+				mapAssist.CallStatic("put", map, kvp.Key, value);
 			}
+		}
 		if(score.HasValue)
 		{
 			mapAssist.CallStatic("put", map, "score", score.Value.ToString());
@@ -280,17 +290,31 @@ public partial class Scoreflex
 
 	public string GetPlayerId()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return string.Empty;
+		}
+
 		return scoreflex.CallStatic<string>("getPlayerId");
 	}
 	
 	public float GetPlayingTime()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return 0f;
+		}
+
 		long l = scoreflex.CallStatic<long>("getPlayingSessionTime");
 		return (float) l;
 	}
 	
 	public void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_FULLSCREEN_VIEW");
 		AddFigureToIntentIfNotNull(intent, resource, "INTENT_EXTRA_FULLSCREEN_RESOURCE");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -301,6 +325,10 @@ public partial class Scoreflex
 
 	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		AndroidJavaObject view = null;
 
@@ -344,11 +372,19 @@ public partial class Scoreflex
 	
 	public void SetDeviceToken(string deviceToken)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		Debug.LogWarning("Scoreflex.setDeviceToken called on an Android device; will do nothing.");
 	}
 	
 	public void ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_GAMES");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -357,6 +393,10 @@ public partial class Scoreflex
 	
 	public void ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -365,6 +405,10 @@ public partial class Scoreflex
 	
 	public void ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_DETAIL");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -373,6 +417,10 @@ public partial class Scoreflex
 	
 	public void ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_PLAYERS");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -381,6 +429,10 @@ public partial class Scoreflex
 	
 	public void ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD");
 		Debug.Log("LeaderboardID: " + leaderboardId);
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
@@ -390,6 +442,10 @@ public partial class Scoreflex
 	
 	public void ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD_OVERVIEW");
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -398,6 +454,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGES");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -405,6 +465,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_FRIENDS");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -413,6 +477,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_NEWS_FEED");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -421,6 +489,10 @@ public partial class Scoreflex
 		
 	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -429,6 +501,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE_EDIT");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -436,6 +512,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_RATING");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -443,6 +523,10 @@ public partial class Scoreflex
 	
 	public void ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_SETTINGS");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -450,6 +534,10 @@ public partial class Scoreflex
 	
 	public void ShowSearch(Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_SEARCH");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -459,6 +547,10 @@ public partial class Scoreflex
 
 	public void ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
 			var requestParams = CreateRequestParamsFromDictionary(parameters, score);
 			ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams, true);
@@ -467,6 +559,10 @@ public partial class Scoreflex
 	
 	public void HideRanksPanel()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		if(ranksPanelView != null)
 		{
 			unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
@@ -478,16 +574,30 @@ public partial class Scoreflex
 	
 	public void StartPlayingSession()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		scoreflex.CallStatic("startPlayingSession");
 	}
 	
 	public void StopPlayingSession()
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+
 		scoreflex.CallStatic("stopPlayingSession");
 	}
 	
 	public void Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			callback(false, new Dictionary<string,object>());
+	         return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("get", resource, droidParams, droidHandler);
@@ -495,6 +605,12 @@ public partial class Scoreflex
 	
 	public void Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("put", resource, droidParams, droidHandler);
@@ -502,6 +618,12 @@ public partial class Scoreflex
 	
 	public void Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("post", resource, droidParams, droidHandler);
@@ -509,6 +631,12 @@ public partial class Scoreflex
 	
 	public void PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("postEventually", resource, droidParams, droidHandler);
@@ -516,12 +644,24 @@ public partial class Scoreflex
 	
 	public void Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("delete", resource, droidHandler);
 	}
 	
 	public void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			if(callback != null) callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters, score);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitTurn", challengeInstanceId, droidParams, droidHandler);
@@ -529,6 +669,12 @@ public partial class Scoreflex
 	
 	public void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			if(callback != null) callback(false, new Dictionary<string,object>());
+			return;
+		}
+
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitScore", leaderboardId, score, droidParams, droidHandler);
@@ -536,12 +682,22 @@ public partial class Scoreflex
 	
 	public void SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
 		ShowRanksPanel(leaderboardId, score, gravity:gravity);
 		SubmitScore(leaderboardId, score, parameters, (success, dict) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
 	}
 	
 	public void SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
 	{
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return;
+		}
+
 		SubmitTurn(challengeInstanceId, score, parameters, (success, dict) => {
 			AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGE_DETAIL");
 			AddFigureToIntentIfNotNull(intent, challengeInstanceId, "INTENT_EXTRA_CHALLENGE_INSTANCE_ID");
