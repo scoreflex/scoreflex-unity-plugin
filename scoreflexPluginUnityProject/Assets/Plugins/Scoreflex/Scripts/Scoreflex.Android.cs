@@ -288,33 +288,19 @@ public partial class Scoreflex
 		}));
 	}
 
-	public string GetPlayerId()
+	public string _GetPlayerId()
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			return string.Empty;
-		}
-
 		return scoreflex.CallStatic<string>("getPlayerId");
 	}
 	
-	public float GetPlayingTime()
+	public float _GetPlayingTime()
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			return 0f;
-		}
-
 		long l = scoreflex.CallStatic<long>("getPlayingSessionTime");
 		return (float) l;
 	}
 	
-	public void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
+	public void _ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_FULLSCREEN_VIEW");
 		AddFigureToIntentIfNotNull(intent, resource, "INTENT_EXTRA_FULLSCREEN_RESOURCE");
 		AddParametersToIntentIfNotNull(intent, parameters);
@@ -323,12 +309,8 @@ public partial class Scoreflex
 
 	private readonly Dictionary<int,AndroidJavaObject> scoreflexViewByHandle = new Dictionary<int,AndroidJavaObject>();
 
-	public View ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		AndroidJavaObject view = null;
 
@@ -360,7 +342,7 @@ public partial class Scoreflex
 		}
 	}
 
-	private void HidePanelView(int handle)
+	private void _HidePanelView(int handle)
 	{
 		if(scoreflexViewByHandle.ContainsKey(handle))
 		{
@@ -370,69 +352,45 @@ public partial class Scoreflex
 		}
 	}
 	
-	public void SetDeviceToken(string deviceToken)
+	public void _SetDeviceToken(string deviceToken)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		Debug.LogWarning("Scoreflex.setDeviceToken called on an Android device; will do nothing.");
 	}
 	
-	public void ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
+	public void _ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_GAMES");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
+	public void _ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_DEVELOPER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, developerId, "INTENT_EXTRA_DEVELOPER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
+	public void _ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_DETAIL");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
+	public void _ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_GAME_PLAYERS");
 		AddFigureToIntentIfNotNull(intent, gameId, "INTENT_EXTRA_GAME_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
+	public void _ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD");
 		Debug.Log("LeaderboardID: " + leaderboardId);
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
@@ -440,104 +398,68 @@ public partial class Scoreflex
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
+	public void _ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_LEADERBOARD_OVERVIEW");
 		AddFigureToIntentIfNotNull(intent, leaderboardId, "INTENT_EXTRA_LEADERBOARD_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerChallenges(Dictionary<string,object> parameters = null)
+	public void _ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGES");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
+	public void _ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_FRIENDS");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
+	public void _ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_NEWS_FEED");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 
 		
-	public void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
+	public void _ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE");
 		AddFigureToIntentIfNotNull(intent, playerId, "INTENT_EXTRA_PLAYER_PROFILE_ID");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
+	public void _ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_PROFILE_EDIT");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerRating(Dictionary<string,object> parameters = null)
+	public void _ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_RATING");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowPlayerSettings(Dictionary<string,object> parameters = null)
+	public void _ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_PLAYER_SETTINGS");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
 	}
 	
-	public void ShowSearch(Dictionary<string,object> parameters = null)
+	public void _ShowSearch(Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_SEARCH");
 		AddParametersToIntentIfNotNull(intent, parameters);
 		StartActivityWithIntent(intent);
@@ -545,24 +467,16 @@ public partial class Scoreflex
 
 	private AndroidJavaObject ranksPanelView = null;
 
-	public void ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
 			var requestParams = CreateRequestParamsFromDictionary(parameters, score);
 			ranksPanelView = scoreflex.CallStatic<AndroidJavaObject>("showRanksPanel", unityActivity, leaderboardId, androidGravity[gravity], requestParams, true);
 		}));
 	}
 	
-	public void HideRanksPanel()
+	public void _HideRanksPanel()
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		if(ranksPanelView != null)
 		{
 			unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
@@ -572,133 +486,73 @@ public partial class Scoreflex
 		}
 	}
 	
-	public void StartPlayingSession()
+	public void _StartPlayingSession()
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		scoreflex.CallStatic("startPlayingSession");
 	}
 	
-	public void StopPlayingSession()
+	public void _StopPlayingSession()
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-		}
-
 		scoreflex.CallStatic("stopPlayingSession");
 	}
 	
-	public void Get(string resource, Dictionary<string,object> parameters, Callback callback)
+	public void _Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			callback(false, new Dictionary<string,object>());
-	         return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("get", resource, droidParams, droidHandler);
 	}
 	
-	public void Put(string resource, Dictionary<string,object> parameters, Callback callback)
+	public void _Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("put", resource, droidParams, droidHandler);
 	}
 	
-	public void Post(string resource, Dictionary<string,object> parameters, Callback callback)
+	public void _Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("post", resource, droidParams, droidHandler);
 	}
 	
-	public void PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
+	public void _PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("postEventually", resource, droidParams, droidHandler);
 	}
 	
-	public void Delete(string resource, Dictionary<string,object> parameters, Callback callback)
+	public void _Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("delete", resource, droidHandler);
 	}
 	
-	public void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
+	public void _SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			if(callback != null) callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters, score);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitTurn", challengeInstanceId, droidParams, droidHandler);
 	}
 	
-	public void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
+	public void _SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			if(callback != null) callback(false, new Dictionary<string,object>());
-			return;
-		}
-
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
 		var droidHandler = new ResponseHandler(this, callback).ToBridge();
 		scoreflex.CallStatic("submitScore", leaderboardId, score, droidParams, droidHandler);
 	}
 	
-	public void SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			return;
-		}
-
-		ShowRanksPanel(leaderboardId, score, gravity:gravity);
-		SubmitScore(leaderboardId, score, parameters, (success, dict) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
+		_ShowRanksPanel(leaderboardId, score, gravity:gravity);
+		_SubmitScore(leaderboardId, score, parameters, (success, dict) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
 	}
 	
-	public void SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
+	public void _SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
 	{
-		if(!Live) {
-			Debug.Log(ErrorNotLive);
-			return;
-		}
-
-		SubmitTurn(challengeInstanceId, score, parameters, (success, dict) => {
+		_SubmitTurn(challengeInstanceId, score, parameters, (success, dict) => {
 			AndroidJavaObject intent = CreateScoreflexActivityIntent("INTENT_EXTRA_SHOW_CHALLENGE_DETAIL");
 			AddFigureToIntentIfNotNull(intent, challengeInstanceId, "INTENT_EXTRA_CHALLENGE_INSTANCE_ID");
 			StartActivityWithIntent(intent);

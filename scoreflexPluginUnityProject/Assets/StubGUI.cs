@@ -12,7 +12,7 @@ public class StubGUI : MonoBehaviour
 
 	void Start()
 	{
-		Scoreflex.Instance.PlaySoloHandlers = PlaySoloHandler;
+		Scoreflex.PlaySoloHandlers = PlaySoloHandler;
 	}
 
 	void PlaySoloHandler(string leaderboardId)
@@ -24,15 +24,15 @@ public class StubGUI : MonoBehaviour
 	{
 		if(GUI.Button(new Rect(10, 10, 96, 64), "Show"))
 		{
-			Scoreflex.Instance.ShowPlayerProfile();
+			Scoreflex.ShowPlayerProfile();
 		}
 
 		if(GUI.Button(new Rect(10, 84, 96, 64), "Trip Test"))
 		{
-			var id = Scoreflex.Instance.GetPlayerId();
+			var id = Scoreflex.GetPlayerId();
 			Debug.Log("Player ID: " + id);
-			Debug.Log("Playing Time: " + Scoreflex.Instance.GetPlayingTime());
-			Scoreflex.Instance.Get("/players/"+id, null, (bool success, Dictionary<string,object> result) => {
+			Debug.Log("Playing Time: " + Scoreflex.GetPlayingTime());
+			Scoreflex.Get("/players/"+id, null, (bool success, Dictionary<string,object> result) => {
 				Debug.Log("REQUEST EXECUTED");
 			});
 		}
