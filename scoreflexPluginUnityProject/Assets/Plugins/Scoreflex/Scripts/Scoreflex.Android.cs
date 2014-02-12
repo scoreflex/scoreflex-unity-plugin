@@ -169,12 +169,11 @@ public partial class Scoreflex
 		StartActivityWithIntent(intent);
 	}
 
-	//private readonly Dictionary<int,AndroidJavaObject> scoreflexViewByHandle = new Dictionary<int,AndroidJavaObject>();
-
 	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		var requestParams = CreateRequestParamsFromDictionary(parameters, score);
-		Helper.CallStatic<int>("showPanelView", UnityActivity, resource, requestParams, androidGravity[gravity]);
+		var requestParams = CreateRequestParamsFromDictionary(parameters);
+		int key = Helper.CallStatic<int>("showPanelView", UnityActivity, resource, requestParams, androidGravity[gravity]);
+		return new View(key);
 	}
 
 	private void _HidePanelView(int handle)
