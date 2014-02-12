@@ -30,15 +30,13 @@ public partial class Scoreflex : MonoBehaviour
 		}
 	}
 
-	public delegate void Callback(bool success, Dictionary<string,object> response);
-
 	private static Scoreflex Instance;
 
 	private bool initialized = false;
 
-	public bool Live {
+	public static bool Live {
 		get {
-			return initialized;
+			return Instance != null && Instance.initialized;
 		}
 	}
 
@@ -47,9 +45,99 @@ public partial class Scoreflex : MonoBehaviour
 	public static System.Action<string> PlaySoloHandlers = null;
 	public static System.Action<Dictionary<string,object>> ChallengeHandlers = null;
 
+	// CALLBACK FACILITY //
+	
+	public delegate void Callback(bool success, Dictionary<string,object> response);
+	
+	private readonly Dictionary<string,Callback> CallbackTable = new Dictionary<string,Callback>();
+	
+	string RegisterCallback(Callback callback)
+	{
+		string key;
+		var random = new System.Random();
+		do {
+			key = random.Next().ToString();
+		} while(CallbackTable.ContainsKey(key));
+		
+		CallbackTable[key] = callback;
+		
+		return key;
+	}
+	
+	void HandleCallback(string figure)
+	{
+		if(figure.Contains(":"))
+		{
+			bool success = figure.Contains("success");
+			string handlerKey = figure.Split(':')[0];
+			string jsonString = figure.Substring(handlerKey.Length + ":success:".Length); // :failure is the same length
+			
+			var dictionary = new Dictionary<string,object>();
+			
+			try
+			{
+				if(jsonString.Length > 0)
+				{
+					var parsed = MiniJSON.Json.Deserialize(jsonString) as Dictionary<string,object>;
+
+					foreach(var kvp in parsed)
+					{
+						dictionary.Add(kvp.Key, kvp.Value);
+					}
+				}
+			}
+			catch(System.Exception ex)
+			{
+				Debug.LogException(ex);
+				Debug.LogError("Scoreflex: Received unparsable JSON code: " + jsonString);
+			}
+			
+			if(CallbackTable.ContainsKey(handlerKey))
+			{
+				CallbackTable[handlerKey](success, dictionary);
+				CallbackTable.Remove(handlerKey);
+			}
+			else
+			{
+				Debug.Log("Scoreflex: Received invalid callback code from native library: " + handlerKey);
+			}
+		}
+		else
+		{
+			Debug.Log("Scoreflex: Received invalid callback code from native library: " + figure);
+		}
+	}
+	
+	void HandlePlaySolo(string figure)
+	{
+		if(PlaySoloHandlers == null)
+		{
+			Debug.LogError("Scoreflex: Instructed to play solo, but no handlers configured! Please assign to Scoreflex.Instance.PlaySoloHandlers");
+		}
+		else
+		{
+			PlaySoloHandlers(figure);
+		}
+	}
+	
+	void HandleChallenge(string figure)
+	{
+		if(ChallengeHandlers == null)
+		{
+			Debug.LogError("Scoreflex: Received challenge, but found no challenge handler! Please assign to Scoreflex.Instance.ChallengeHandlers");
+		}
+		else
+		{
+			var dict = MiniJSON.Json.Deserialize(figure) as Dictionary<string,object>;
+			ChallengeHandlers(dict);
+		}
+	}
+
+	// WRAPPERS //
+
 	public static string GetPlayerId()
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return string.Empty;
 		}
@@ -59,7 +147,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static float GetPlayingTime()
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return 0f;
 		}
@@ -69,7 +157,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -78,7 +166,7 @@ public partial class Scoreflex : MonoBehaviour
 
 	public static View ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			return null;
 		}
@@ -88,7 +176,7 @@ public partial class Scoreflex : MonoBehaviour
 		
 	public static void SetDeviceToken(string deviceToken)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -97,7 +185,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -106,7 +194,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -115,7 +203,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -124,7 +212,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -133,7 +221,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -142,7 +230,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -151,7 +239,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -160,7 +248,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -169,7 +257,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -179,7 +267,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -188,7 +276,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -197,7 +285,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -206,7 +294,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -215,7 +303,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void ShowSearch(Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -224,7 +312,7 @@ public partial class Scoreflex : MonoBehaviour
 
 	public static void ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -233,7 +321,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void HideRanksPanel()
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -242,7 +330,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void StartPlayingSession()
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -251,7 +339,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void StopPlayingSession()
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -260,7 +348,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			callback(false, new Dictionary<string,object>());
 		}
@@ -270,7 +358,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			callback(false, new Dictionary<string,object>());
 		}
@@ -280,7 +368,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			callback(false, new Dictionary<string,object>());
 		}
@@ -290,7 +378,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			callback(false, new Dictionary<string,object>());
 		}
@@ -300,7 +388,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			callback(false, new Dictionary<string,object>());
 		}
@@ -310,7 +398,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			if(callback != null) callback(false, new Dictionary<string,object>());
 		}
@@ -320,7 +408,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 			if(callback != null) callback(false, new Dictionary<string,object>());
 		}
@@ -330,7 +418,7 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
@@ -339,12 +427,13 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static void SubmitTurnAndShowChallengeDetail(string challengeInstanceId, long score, Dictionary<string,object> parameters = null)
 	{
-		if(Instance == null || !Instance.Live) {
+		if(!Live) {
 			Debug.Log(ErrorNotLive);
 		}
 		else
 			Instance._SubmitTurnAndShowChallengeDetail(challengeInstanceId, score, parameters);
 	}
+
 }
 
 
