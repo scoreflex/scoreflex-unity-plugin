@@ -25,7 +25,7 @@ public partial class Scoreflex : MonoBehaviour
 			#if UNITY_IPHONE
 			Scoreflex.scoreflexHidePanelView(handle);
 			#elif UNITY_ANDROID
-			if(Scoreflex.Live) Scoreflex.Instance._HidePanelView(handle);
+			if(Scoreflex.Instance != null) Scoreflex.Instance._HidePanelView(handle);
 			#endif
 		}
 	}

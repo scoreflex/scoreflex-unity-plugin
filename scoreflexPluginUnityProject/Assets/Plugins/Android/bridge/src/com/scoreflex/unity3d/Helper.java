@@ -1,17 +1,12 @@
 package com.scoreflex.unity3d;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.scoreflex.Scoreflex;
 import com.scoreflex.ScoreflexView;
 import com.unity3d.player.UnityPlayer;
 
-import android.R.integer;
 import android.app.Activity;
 import android.content.*;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.SparseArray;
 
 public class Helper
 {
@@ -19,8 +14,6 @@ public class Helper
 	
 	//Note that this is only affected from within the UI thread; it does not need to be thread safe.
 	private static ScoreflexView ranksPanelView = null;
-	
-	private final static SparseArray<ScoreflexView> panelViews = new SparseArray<ScoreflexView>();
 	
 	public static void setupBroadcastReceivers(final Activity activity) {
 		activity.runOnUiThread(new Runnable() {
@@ -53,42 +46,6 @@ public class Helper
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				activity.startActivity(intent);
-			}
-		});
-	}
-	
-	public static int showPanelView(final Activity activity, final String resource, final Scoreflex.RequestParams params, final int gravity)
-	{
-		int _key = -1;
-		
-		for(int i = 0; i < Integer.MAX_VALUE; i++)
-		{
-			if(panelViews.get(i) == null)
-			{
-				_key = i;
-				break;
-			}
-		}
-		
-		final int key = _key;
-
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
-				ScoreflexView view = Scoreflex.showPanelView(activity, resource, params, gravity);
-				Helper.panelViews.put(key, view);
-			}
-		});
-		
-		return key;
-	}
-	
-	public static void hidePanelView(final Activity activity, final int key)
-	{
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
-				ScoreflexView view = Helper.panelViews.get(key);
-				if(view != null) view.close();
-				Helper.panelViews.put(key, null);
 			}
 		});
 	}
