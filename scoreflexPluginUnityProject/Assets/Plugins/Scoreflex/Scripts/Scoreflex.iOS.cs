@@ -70,10 +70,8 @@ public partial class Scoreflex
 		scoreflexShowFullscreenView(resource, json);
 	}
 
-	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
+	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		gravity = FilterGravity(gravity);
-
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		int handle = scoreflexShowPanelView(resource, json, (int) gravity);
@@ -177,10 +175,8 @@ public partial class Scoreflex
 		scoreflexShowPlayerSettings(json);
 	}
 
-	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
+	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		gravity = FilterGravity(gravity);
-
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexShowRanksPanel(leaderboardId, score, json, (int) gravity);
@@ -271,10 +267,8 @@ public partial class Scoreflex
 		scoreflexSubmitScore(leaderboardId, score, json, handlerKey);
 	}
 
-	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
+	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
-		gravity = FilterGravity(gravity);
-
 		string json = parameters == null ? null : MiniJSON.Json.Serialize(parameters);
 
 		scoreflexSubmitScoreAndShowRanksPanel(leaderboardId, score, json, (int) gravity);

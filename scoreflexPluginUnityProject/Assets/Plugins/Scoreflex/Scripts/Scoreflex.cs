@@ -9,7 +9,7 @@ public partial class Scoreflex : MonoBehaviour
 	public string ClientSecret;
 	public bool Sandbox;
 
-	public enum Gravity { Default = 0, Bottom = 1, Top = 2 };
+	public enum Gravity { Bottom = 0, Top = 1 };
 
 	public class View
 	{
@@ -44,16 +44,6 @@ public partial class Scoreflex : MonoBehaviour
 	
 	public static System.Action<string> PlaySoloHandlers = null;
 	public static System.Action<Dictionary<string,object>> ChallengeHandlers = null;
-
-	private const Gravity SuperDefaultGravity = Gravity.Top;
-	public static Gravity DefaultGravity = SuperDefaultGravity;
-
-	private static Gravity FilterGravity(Gravity gravity)
-	{
-		if(gravity == Gravity.Default) gravity = DefaultGravity;
-		if(gravity == Gravity.Default) gravity = SuperDefaultGravity;
-		return gravity;
-	}
 
 	// CALLBACK FACILITY //
 	
