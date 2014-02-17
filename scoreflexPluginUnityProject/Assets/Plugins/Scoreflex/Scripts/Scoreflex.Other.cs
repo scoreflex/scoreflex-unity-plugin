@@ -20,229 +20,229 @@ public partial class Scoreflex
 		}
 	}
 
-	public string _GetPlayerId()
+	private string _GetPlayerId()
 	{
 		Debug.Log(ErrorNotLive);
 		return string.Empty;
 	}
 
-	public float _GetPlayingTime()
+	private float _GetPlayingTime()
 	{
 		Debug.Log(ErrorNotLive);
 		return 0f;
 	}
 
-	public void _ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
+	private void _ShowFullscreenView(string resource, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	private View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		Debug.Log(ErrorNotLive);
 		return null;
 	}
 
-	public void _SetDeviceToken(string deviceToken)
+	private void _SetDeviceToken(string deviceToken)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
+	private void _ShowDeveloperGames(string developerId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
+	private void _ShowDeveloperProfile(string developerId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
+	private void _ShowGameDetails(string gameId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
+	private void _ShowGamePlayers(string gameId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
+	private void _ShowLeaderboard(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
+	private void _ShowLeaderboardOverview(string leaderboardId, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerChallenges(Dictionary<string,object> parameters = null)
+	private void _ShowPlayerChallenges(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
+	private void _ShowPlayerFriends(string playerId = null, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
+	private void _ShowPlayerNewsFeed(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
+	private void _ShowPlayerProfile(string playerId = null, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
+	private void _ShowPlayerProfileEdit(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerRating(Dictionary<string,object> parameters = null)
+	private void _ShowPlayerRating(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowPlayerSettings(Dictionary<string,object> parameters = null)
+	private void _ShowPlayerSettings(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	private void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _HideRanksPanel()
+	private void _HideRanksPanel()
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _ShowSearch(Dictionary<string,object> parameters = null)
+	private void _ShowSearch(Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _StartPlayingSession()
+	private void _StartPlayingSession()
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _StopPlayingSession()
+	private void _StopPlayingSession()
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _Get(string resource, Dictionary<string,object> parameters, Callback callback)
+	private void _Get(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _Put(string resource, Dictionary<string,object> parameters, Callback callback)
+	private void _Put(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 	
-	public void _Post(string resource, Dictionary<string,object> parameters, Callback callback)
+	private void _Post(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
+	private void _PostEventually(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _Delete(string resource, Dictionary<string,object> parameters, Callback callback)
+	private void _Delete(string resource, Dictionary<string,object> parameters, Callback callback)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
+	private void _SubmitTurn(string challengeInstanceId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
+	private void _SubmitScore(string leaderboardId, long score, Dictionary<string,object> parameters = null, Callback callback = null)
 	{
 		Debug.Log(ErrorNotLive);
 		if(callback != null) callback(false, new Dictionary<string,object>());
 		return;
 	}
 
-	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	private void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _SubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, long score, Dictionary<string,object> parameters = null)
+	private void _SubmitTurnAndShowChallengeDetail(string challengeLeaderboardId, long score, Dictionary<string,object> parameters = null)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
-	public string _GetLanguageCode()
+	private string _GetLanguageCode()
 	{
 		Debug.Log(ErrorNotLive);
 		return string.Empty;
 	}
 	
-	public void _SetLanguageCode(string languageCode)
+	private void _SetLanguageCode(string languageCode)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _PreloadResource(string resource)
+	private void _PreloadResource(string resource)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public void _FreePreloadedResource(string resource)
+	private void _FreePreloadedResource(string resource)
 	{
 		Debug.Log(ErrorNotLive);
 		return;
 	}
 
-	public bool _IsReachable {
+	private bool _IsReachable {
 		get {
 			return false;
 		}

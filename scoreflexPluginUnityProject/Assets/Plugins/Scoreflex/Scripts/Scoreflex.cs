@@ -180,9 +180,14 @@ public partial class Scoreflex : MonoBehaviour
 	/// ru, sk, sl, sq, sr, sv, sw, ta, th, tl, tr,
 	/// uk, vi, zh, zh_CN, zh_TW, zh_HK
 	/// </returns>
-	public string GetLanguageCode()
+	public static string GetLanguageCode()
 	{
-		return _GetLanguageCode();
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+			return string.Empty;
+		}
+		else
+			return Instance._GetLanguageCode();
 	}
 	
 	/// <summary>
@@ -196,9 +201,13 @@ public partial class Scoreflex : MonoBehaviour
 	/// mk, ms, nb, nl, pa, pl, pt, pt_PT, pt_BR, ro,
 	/// ru, sk, sl, sq, sr, sv, sw, ta, th, tl, tr,
 	/// uk, vi, zh, zh_CN, zh_TW, zh_HK</param>
-	public void SetLanguageCode(string languageCode)
+	public static void SetLanguageCode(string languageCode)
 	{
-		_SetLanguageCode(languageCode);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+		else
+			Instance._SetLanguageCode(languageCode);
 	}
 	
 	/// <summary>
@@ -206,27 +215,40 @@ public partial class Scoreflex : MonoBehaviour
 	/// hold a reference on it until the view is shown or freed.
 	/// </summary>
 	/// <param name="resource">Name of the resource to preload.</param>
-	public void PreloadResource(string resource)
+	public static void PreloadResource(string resource)
 	{
-		_PreloadResource(resource);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+		else
+			Instance._PreloadResource(resource);
 	}
 	
 	/// <summary>
 	/// Frees the preloaded resource.
 	/// </summary>
 	/// <param name="resource">Name of the preloaded resource.</param>
-	public void FreePreloadedResource(string resource)
+	public static void FreePreloadedResource(string resource)
 	{
-		_FreePreloadedResource(resource);
+		if(!Live) {
+			Debug.Log(ErrorNotLive);
+		}
+		else
+			Instance._FreePreloadedResource(resource);
 	}
 	
 	/// <summary>
 	/// Identifies whether the Scoreflex server is reachable.
 	/// </summary>
 	/// <value><c>true</c> if the server is reachable; otherwise, <c>false</c>.</value>
-	public bool IsReachable {
+	public static bool IsReachable {
 		get {
-			return _IsReachable;
+			if(!Live) {
+				Debug.Log(ErrorNotLive);
+				return false;
+			}
+			else
+				return Instance._IsReachable;
 		}
 	}
 	
