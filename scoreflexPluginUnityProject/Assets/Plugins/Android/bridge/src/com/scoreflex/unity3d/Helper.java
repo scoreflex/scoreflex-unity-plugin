@@ -5,7 +5,8 @@ import java.util.Map;
 import com.scoreflex.Scoreflex;
 import com.scoreflex.ScoreflexView;
 import com.unity3d.player.UnityPlayer;
-
+import java.util.Random;
+import android.util.SparseArray;
 import android.app.Activity;
 import android.content.*;
 import android.support.v4.content.LocalBroadcastManager;
@@ -47,6 +48,44 @@ public class Helper
 	{
 		UnityPlayer.UnitySendMessage(gameObjectName, method, message);
 	}
+	
+	private static final SparseArray<ScoreflexView> panelViews = new SparseArray<ScoreflexView>();
+	
+	public static int showPanelView(final Activity activity, final String resource, final Scoreflex.RequestParams params, final int gravity)
+	{
+		Random random = new Random();
+		int _key;
+		do
+		{
+			_key = random.nextInt(); 
+		}
+		while(panelViews.get(_key) != null);
+
+		final int key = _key;
+		
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				ScoreflexView view = Scoreflex.showPanelView(activity, resource, params, gravity);
+				panelViews.put(key, view);
+			}
+		});
+		
+		return key;	
+	}
+	
+	public static void hidePanelView(final Activity activity, final int key)
+	{
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				ScoreflexView view = panelViews.get(key);
+				if(view != null)
+				{
+					view.close();
+					panelViews.put(key, null);
+				}
+			}
+		});
+	 }	
 	
 	public static void preloadResource(final Activity activity, final String resource)
 	{

@@ -199,54 +199,17 @@ public partial class Scoreflex
 		ScoreflexClass.CallStatic("registerForPushNotification", UnityActivity);
 	}
 	
-	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public View _ShowPanelView(string resource, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
 	{
-		throw new System.NotImplementedException();
-
-		/*
+		gravity = FilterGravity(gravity);
 		var droidParams = CreateRequestParamsFromDictionary(parameters);
-#warning We probably cannot be passing this ref back; we need to refer to views with global refs
-		AndroidJavaObject view = null;
-
-		UnityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
-			var scoreflexClass = new AndroidJavaClass("com.scoreflex.Scoreflex");
-			view = scoreflexClass.CallStatic<AndroidJavaObject>("showPanelView", UnityActivity, resource, droidParams, androidGravity[gravity]);
-		}));
-
-		const int timeout = 5000;
-		int countdown = timeout;
-
-		while(view == null && countdown > 0)
-		{
-			const int rest = 5;
-			System.Threading.Thread.Sleep(rest);
-			countdown -= rest;
-		}
-
-		if(view == null)
-		{
-			Debug.LogError("Scoreflex.ShowPanelView attempted to call up a panel view but request timed out.");
-			return null;
-		}
-		else
-		{
-			int newHandle;
-			do newHandle = Random.Range(1, int.MaxValue); while(scoreflexViewByHandle.ContainsKey(newHandle) == false);
-			scoreflexViewByHandle[newHandle] = view;
-			return new View(newHandle);
-		}*/
+		int key = Helper.CallStatic<int>("showPanelView", UnityActivity, resource, droidParams, androidGravity[gravity]);
+		return new View(key);
 	}
 
 	private void _HidePanelView(int handle)
 	{
-		throw new System.NotImplementedException();
-		/*
-		if(scoreflexViewByHandle.ContainsKey(handle))
-		{
-			AndroidJavaObject view = scoreflexViewByHandle[handle];
-			view.Call("close");
-			scoreflexViewByHandle.Remove(handle);
-		}*/
+		Helper.CallStatic("hidePanelView", UnityActivity, handle);
 	}
 	
 	public void _SetDeviceToken(string deviceToken)
@@ -362,8 +325,9 @@ public partial class Scoreflex
 		StartActivityWithIntent(intent);
 	}
 
-	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public void _ShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
 	{
+		gravity = FilterGravity(gravity);
 		var requestParams = CreateRequestParamsFromDictionary(parameters, score);
 		Helper.CallStatic("showRanksPanel", UnityActivity, leaderboardId, androidGravity[gravity], requestParams, true);
 	}
@@ -431,8 +395,9 @@ public partial class Scoreflex
 		Helper.CallStatic("submitScore", leaderboardId, score, droidParams, key);
 	}
 	
-	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Top)
+	public void _SubmitScoreAndShowRanksPanel(string leaderboardId, long score, Dictionary<string,object> parameters = null, Gravity gravity = Gravity.Default)
 	{
+		gravity = FilterGravity(gravity);
 		_ShowRanksPanel(leaderboardId, score, gravity:gravity);
 		_SubmitScore(leaderboardId, score, parameters, (success, dict) => { Debug.Log("Score submission " + (success ? "successful" : "failed")); });
 	}
