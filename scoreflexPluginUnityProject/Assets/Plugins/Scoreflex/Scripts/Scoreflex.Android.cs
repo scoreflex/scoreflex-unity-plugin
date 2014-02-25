@@ -48,7 +48,7 @@ public partial class Scoreflex
 			catch(System.Exception ex)
 			{
 				Debug.LogWarning("Failed to boot Scoreflex.");
-				Debug.LogException(ex);
+				//Debug.LogException(ex);
 				initialized = false;
 			}
 			GameObject.DontDestroyOnLoad(gameObject);
@@ -63,6 +63,7 @@ public partial class Scoreflex
 	private string lastObservedInstanceName = null;
 	void Update()
 	{
+		if(!Live) return;
 		string currentName = gameObject.name;
 		if(currentName != lastObservedInstanceName)
 		{
