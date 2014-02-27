@@ -11,6 +11,7 @@ public partial class Scoreflex : MonoBehaviour
 	public string ClientId;
 	public string ClientSecret;
 	public bool Sandbox;
+	public bool Verbose = false;
 
 	public enum Gravity { Default = 0, Bottom = 1, Top = 2 };
 	
