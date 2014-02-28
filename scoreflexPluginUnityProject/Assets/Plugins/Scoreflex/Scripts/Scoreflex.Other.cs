@@ -260,17 +260,22 @@ public partial class Scoreflex
 
 	enum Method { Post, Put, Get, Delete };
 
-	private string CustomEscape(string s)
+	private static string SignatureStringProcessor(string s)
 	{
 		// (ALPHA:"a-zA-Z", DIGIT:"0-9", "-", ".", "_", "~"
 		var validCharacters = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789-._~".ToCharArray();
+		var encoder = System.Text.Encoding.UTF8;
 		var sb = new StringBuilder();
 		foreach(char c in s)
 		{
 			if(System.Array.IndexOf(validCharacters, c) == -1)
 			{
-				sb.Append('%');
-				sb.Append(string.Format(((int) c).ToString("X2")));
+				var encoded = encoder.GetBytes(new char[] { c });
+				for(int i = 0; i < encoded.Length; i++)
+				{
+					sb.Append('%');
+					sb.Append(encoded[i].ToString("X2"));
+				}
 			}
 			else
 			{
@@ -284,11 +289,12 @@ public partial class Scoreflex
 	{
 		Hashtable ht = new Hashtable();
 
-		/*if(Sandbox)
-		{
-			ht.Add("X-Scoreflex-Lenient", "yes");
-		}
-		else*/ if(method != Method.Get)
+//		if(Sandbox)
+//		{
+//			ht.Add("X-Scoreflex-Lenient", "yes");
+//		}
+//		else
+		if(method != Method.Get)
 		{
 			var elements = new List<string>();
 
@@ -296,17 +302,30 @@ public partial class Scoreflex
 			elements.Add(method.ToString().ToUpper());
 	
 			// Step 2: add the URI, without the query string (if one is caught up in there for any reason)
-			int indexOfQuestionMark = resource.IndexOf('?');
-			string URI;
-			if(indexOfQuestionMark == -1) {
-				URI = ScoreflexURL + resource;
+			{
+				var indexOfQuestionMark = resource.IndexOf('?');
+				bool resourceStringHasParameters = indexOfQuestionMark >= 0;
+				string URI;
+				if(resourceStringHasParameters) {
+					URI = ScoreflexURL + resource;
+				}
+				else {
+					URI = ScoreflexURL + resource.Substring(0, resource.IndexOf('?'));
+				}
+				elements.Add(URI);
 			}
-			else {
-				URI = ScoreflexURL + resource.Substring(0, indexOfQuestionMark);
-			}
-			elements.Add(URI);
 
 			// Step 3: add URL encoded parameters (sorted by key)
+			{
+				var indexOfQuestionMark = resource.IndexOf('?');
+				bool resourceStringHasParameters = indexOfQuestionMark >= 0;
+				if(resourceStringHasParameters)
+				{
+					string queryString = resource.Substring(indexOfQuestionMark + 1);
+					parameters = new Dictionary<string, object>(parameters);
+					throw new System.NotImplementedException();
+				}
+			}
 
 			#warning Could there be parameters placed explicitly into the request? If so, clone the parameters array and merge these figures. Review later.
 
@@ -332,7 +351,7 @@ public partial class Scoreflex
 			for(int i = 0; i < elements.Count; i++)
 			{
 				if(i != 0) sb.Append("&");
-				sb.Append(CustomEscape( elements[i] ));
+				sb.Append(SignatureStringProcessor( elements[i] ));
 			}
 
 			var clientSecretUTF8 = System.Text.Encoding.UTF8.GetBytes(ClientSecret);
@@ -342,15 +361,10 @@ public partial class Scoreflex
 			encrypter.Initialize();
 			var clearSignature = sb.ToString();
 			var clearSignatureUTF8 = System.Text.Encoding.UTF8.GetBytes(clearSignature);
-			//var digest = encrypter.TransformFinalBlock(clearSignatureUTF8, 0, clearSignatureUTF8.Length);
 			var digest = encrypter.ComputeHash(clearSignatureUTF8);
 			var sig = System.Convert.ToBase64String(digest).Trim();
 
-			//private static String encode(String s) throws UnsupportedEncodingException {
-		//		return URLEncoder.encode(s, "UTF-8").replace("+", "%20").replace("*", "%2A").replace("%7E", "~");
-		//	}
-
-			sig = WWW.EscapeURL( sig.Replace("+", "%20").Replace("*", "%2A").Replace("%7E", "~") );
+			sig = SignatureStringProcessor(sig);
 
 			printIfVerbose(clearSignature);
 			printIfVerbose(sig);
