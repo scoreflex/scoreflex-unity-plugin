@@ -82,7 +82,10 @@ public partial class Scoreflex : MonoBehaviour
 	// CALLBACK FACILITY //
 	
 	public delegate void Callback(bool success, Dictionary<string,object> response);
-	
+
+	public delegate void ModelCallback<T>(bool success, T result);
+
+
 	private readonly Dictionary<string,Callback> CallbackTable = new Dictionary<string,Callback>();
 	
 	string RegisterCallback(Callback callback)
