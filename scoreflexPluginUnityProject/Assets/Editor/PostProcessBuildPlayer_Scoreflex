@@ -7,20 +7,41 @@ from subprocess import call
 projectDir = sys.argv[1]
 scoreflexDir = projectDir + "/scoreflex"
 try:
+	print 'Copying : ' + "Assets/Plugins/Scoreflex/Info.plist" +  " to : " + sys.argv[1] + "/"
 	shutil.copytree("Assets/Plugins/Scoreflex/iOS", scoreflexDir)
+	shutil.copy("Assets/Plugins/Scoreflex/Info.plist", sys.argv[1] + "/")
+	print 'Copying : ' + "Assets/Plugins/Scoreflex/Info.plist" +  " to : " + sys.argv[1] + "/"
 	call(["unzip", "-o", scoreflexDir + "/ScoreflexResources.bundle.zip", "-d", scoreflexDir])
 except OSError:
 	print 'Scoreflex data already copied.'
 project = XcodeProject.Load(sys.argv[1] + "/Unity-iPhone.xcodeproj/project.pbxproj")
 group = project.get_or_create_group("Scoreflex")
+libraries = project.get_or_create_group("Libraries")
 project.add_file(scoreflexDir + "/NativeBridge.m", parent=group)
 project.add_file(scoreflexDir + "/libScoreflex.a", parent=group)
 project.add_file(scoreflexDir + "/ScoreflexResources.bundle", parent=group)
 project.add_file(scoreflexDir + "/Scoreflex.h", parent=group)
 project.add_file(scoreflexDir + "/SXResponse.h", parent=group)
 project.add_file(scoreflexDir + "/SXview.h", parent=group)
+project.add_file(scoreflexDir + '/FacebookSDK.framework', parent=libraries)
+project.add_file(scoreflexDir + '/GoogleOpenSource.framework', parent=libraries)
+project.add_file(scoreflexDir + '/GooglePlus.framework', parent=libraries)
+project.add_file(scoreflexDir + '/GooglePlus.bundle', parent=libraries)
+
 project.add_file('System/Library/Frameworks/MobileCoreServices.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/AddressBook.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/AssetsLibrary.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/CoreLocation.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/CoreText.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/MediaPlayer.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/Security.framework', tree='SDKROOT')
 project.add_file('System/Library/Frameworks/SystemConfiguration.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/Foundation.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/UIKit.framework', tree='SDKROOT')
+project.add_file('System/Library/Frameworks/CoreGraphics.framework', tree='SDKROOT')
+project.add_framework_search_paths([scoreflexDir,'$(inherited)'])
+project.add_other_ldflags(["-ObjC", "-all_load"])
+
 project.save()
 
 appControllerFilename = projectDir + "/Classes/UnityAppController.mm"

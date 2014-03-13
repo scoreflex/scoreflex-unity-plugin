@@ -14,6 +14,7 @@ public final class R {
         public static int ic_launcher=0x7f020000;
     }
     public static final class string {
+        public static int app_id=0x7f030002;
         public static int app_name=0x7f030000;
         public static int push_sender_id=0x7f030001;
     }
