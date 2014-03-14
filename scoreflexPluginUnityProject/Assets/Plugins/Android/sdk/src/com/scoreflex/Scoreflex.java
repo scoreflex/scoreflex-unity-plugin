@@ -87,8 +87,10 @@ public class Scoreflex {
 	private static int sDefaultGravity = Gravity.BOTTOM;
 	private static WeakReference<ScoreflexView> mScoreflexView;
 	private static HashMap<String, ScoreflexView> mPreloadedViews;
+	public static boolean showDebug = false;
 
 	protected static final String API_VERSION = "v1";
+	protected static final String SDK_VERSION = "Unity-Android-1.0.0.2";
 
 	private static final String PRODUCTION_API_URL = "https://api.scoreflex.com/"
 			+ API_VERSION;
@@ -1905,16 +1907,17 @@ public class Scoreflex {
 
 
 	protected static void showView(Activity activity, String resource, Scoreflex.RequestParams params, boolean useActivityForViews) {
-		if (useActivityForViews) { 
+		if (useActivityForViews) {
 			Intent intent = new Intent(activity, ScoreflexActivity.class);
 			intent.putExtra(ScoreflexActivity.INTENT_SHOW_EXTRA_KEY, ScoreflexActivity.INTENT_EXTRA_SHOW_FULLSCREEN_VIEW);
 			intent.putExtra(ScoreflexActivity.INTENT_EXTRA_FULLSCREEN_RESOURCE, resource);
 			intent.putExtra(ScoreflexActivity.INTENT_EXTRA_REQUEST_PARAMS_KEY, params);
 			activity.startActivity(intent);
-		} else { 
+		} else {
 			showFullScreenView(activity,resource, params);
 		}
 	}
+
 
 	/**
 	 * Method to call on your onCreate method to handle the Scoreflex
@@ -1937,7 +1940,7 @@ public class Scoreflex {
 	 *            The intent the activity received.
 	 * @param useActivityForViews
 	 * 			  Set if scoreflex views should be presented as separate activities
-	 * 
+	 *
 	 * @return <code>true</code> if handled, <code>false</code> otherwise.
 	 */
 	public static boolean onCreateMainActivity(final Activity activity, Intent intent, final boolean useActivityForViews) {
@@ -1948,9 +1951,12 @@ public class Scoreflex {
 			try {
 				JSONObject notification = new JSONObject(notificationString);
 				JSONObject data = notification.getJSONObject("data");
-				String resource = null; 
+				String resource = null;
 				Scoreflex.RequestParams parameters = null;
 				int code = notification.getInt("code");
+				Scoreflex.RequestParams trackParams = new Scoreflex.RequestParams();
+				trackParams.put("code", Integer.toString(code));
+				Scoreflex.postEventually("/notifications/track", trackParams, null);
 				if (NOTIFICATION_TYPE_CHALLENGE_INVITATION == code
 						|| NOTIFICATION_TYPE_YOUR_TURN_IN_CHALLENGE == code
 						|| NOTIFICATION_TYPE_CHALLENGE_ENDED == code) {
@@ -1965,9 +1971,9 @@ public class Scoreflex {
 				} else if (NOTIFICATION_TYPE_PLAYER_LEVEL_CHANGED == code) {
 					resource = "/web/players/me";
 				}
-				if (isInitialized()) { 
+				if (isInitialized()) {
 					showView(activity, resource, parameters, useActivityForViews);
-				} else { 
+				} else {
 					final String finalResource = resource;
 					final Scoreflex.RequestParams params = parameters;
 					BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -1990,14 +1996,14 @@ public class Scoreflex {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Method to call on your onCreate method to handle the Scoreflex
 	 * notification, it must be added to the Activity implementation of the
 	 * class you gave to
 	 * {@link #onBroadcastReceived(Context, Intent, int, Class)} (must be called
 	 * after Scoreflex.initialize(). As follow:
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * protected void onCreate(Bundle savedInstance) {
@@ -2005,7 +2011,7 @@ public class Scoreflex {
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @param activity
 	 *            The current activity.
 	 * @param intent
@@ -2016,6 +2022,7 @@ public class Scoreflex {
 		onCreateMainActivity(activity, intent, false);
 		return false;
 	}
+
 
 	/**
 	 * Starts listening to network connectivity change.

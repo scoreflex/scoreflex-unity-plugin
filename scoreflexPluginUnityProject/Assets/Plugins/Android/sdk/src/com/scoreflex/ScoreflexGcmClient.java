@@ -161,14 +161,15 @@ public class ScoreflexGcmClient {
      }
 
      try {
+
     	JSONObject customData = new JSONObject(customDataJson);
         JSONObject data = customData.getJSONObject(SCOREFLEX_NOTIFICATION_EXTRA_KEY);
         JSONObject sfxData = data.optJSONObject("data");
 
-			if (data.getInt("code") < Scoreflex.NOTIFICATION_TYPE_CHALLENGE_INVITATION) {
-				return false;
-			}
-			String targetPlayerId = sfxData.optString("targetPlayerId");
+            if (data.getInt("code") < Scoreflex.NOTIFICATION_TYPE_CHALLENGE_INVITATION) {
+                return false;
+            }
+            String targetPlayerId = sfxData.optString("targetPlayerId");
 			String loggedPlayerId = ScoreflexRestClient.getPlayerId(context);
 
 			if (!targetPlayerId.equals(loggedPlayerId)) {
@@ -189,43 +190,42 @@ public class ScoreflexGcmClient {
 	}
 
 	private static void registerInBackground(final String senderId, final Context activity) {
-  	Handler handler = new Handler(Looper.getMainLooper());
-  	handler.post(new Runnable() {
-  	      public void run() {
-  	        new AsyncTask<Object, Object, Object>() {
-  	          @Override
-  	          protected Object doInBackground(Object... arg0) {
-  	              String msg = "";
-  	              try {
-  	                  String regid = ScoreflexGcmWrapper.register(Scoreflex.getApplicationContext(), senderId);
-  	                  if (regid == null) {
-  	                  	return null;
-  	                  }
-  	                  msg = "Device registered, registration ID=" + regid;
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            public void run() {
+                    new AsyncTask<Object, Object, Object>() {
+                        @Override
+                        protected Object doInBackground(Object... arg0) {
+                            String msg = "";
+                            try {
+                                String regid = ScoreflexGcmWrapper.register(Scoreflex.getApplicationContext(), senderId);
+                                if (regid == null) {
+                                    return null;
+                                }
+                                msg = "Device registered, registration ID=" + regid;
+                                storeRegistrationId(regid, activity);
+                                storeRegistrationIdToScoreflex(regid);
+                            } catch (IOException ex) {
+                                msg = "Error :" + ex.getMessage();
+                            }
+                            return msg;
+                        }
 
-  	                  storeRegistrationId(regid, activity);
-  	                  storeRegistrationIdToScoreflex(regid);
-  	              } catch (IOException ex) {
-  	                  msg = "Error :" + ex.getMessage();
-  	              }
-  	              return msg;
-  	          }
+                        @Override
+                        protected void onPostExecute(Object msg) {
 
-  	          @Override
-  	          protected void onPostExecute(Object msg) {
-
-  	          }
-  	      }.execute(null, null, null);
-  	      }
-  	  });
-	}
-
+                    }
+                }.execute(null, null, null);
+            }
+        });
+    }
 
 	/**
 	 * Start the registration process for GCM.
 	 * @param senderID The sender ID to register to.
 	 * @param context A valid context
 	 */
+	@SuppressLint("NewApi")
 	public static void registerForPushNotification(Context context) {
 		String regid = getRegistrationId(context);
 	  String pushSenderId = null;
@@ -236,13 +236,13 @@ public class ScoreflexGcmClient {
 	  } catch (NameNotFoundException e) {
 	  	Log.e("Scoreflex", "Could not get com.scoreflex.push.SenderId meta data from your manifest did you add : <meta-data android:name=\"com.scoreflex.push.SenderId\" android:value=\"@string/push_sender_id\"/>");
 	  } catch (NullPointerException e) {
-	  	Log.e("Scoreflex", "Could not get com.scoreflex.push.SenderId meta data from your manifest did you add : <meta-data android:name=\"com.scoreflex.push.SenderId\" android:value=\"@string/push_sender_id\"/>"); 
+	  	Log.e("Scoreflex", "Could not get com.scoreflex.push.SenderId meta data from your manifest did you add : <meta-data android:name=\"com.scoreflex.push.SenderId\" android:value=\"@string/push_sender_id\"/>");
 	  }
-	  
-	  if (pushSenderId == null)  { 
+
+	  if (pushSenderId == null)  {
 	  	return;
 	  }
-	  
+
 	  if (TextUtils.isEmpty(regid)) {
 	  	registerInBackground(pushSenderId, context);
 	  } else {
